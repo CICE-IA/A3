@@ -1,508 +1,507 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-AR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arbitraje Dólar Futuro — DLR A3/ROFEX</title>
+<title>Arbitraje DLR A3/ROFEX</title>
 <style>
-  :root {
-    --bg: #0d1117;
-    --bg2: #161b22;
-    --bg3: #21262d;
-    --border: #30363d;
-    --text: #e6edf3;
-    --text2: #8b949e;
-    --accent: #58a6ff;
-    --green: #3fb950;
-    --green-bg: #0d2818;
-    --yellow: #d29922;
-    --yellow-bg: #2d2208;
-    --red: #f85149;
-    --red-bg: #2a0d0d;
-    --radius: 8px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  header {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  header h1 {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: -0.3px;
-  }
-
-  header .badge {
-    font-size: 11px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2px 10px;
-    color: var(--text2);
-  }
-
-  main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px 16px 60px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .card-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .card-header h2 {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text2);
-  }
-
-  .card-header .toggle-icon {
-    color: var(--text2);
-    font-size: 12px;
-    transition: transform 0.2s;
-  }
-
-  .card-header.collapsed .toggle-icon { transform: rotate(-90deg); }
-
-  .card-body {
-    padding: 16px;
-  }
-
-  .card-body.hidden { display: none; }
-
-  /* Input grid */
-  .input-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  @media (max-width: 600px) {
-    .input-grid { grid-template-columns: 1fr; }
-  }
-
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .input-group.full { grid-column: 1 / -1; }
-
-  .input-group label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: var(--text2);
-  }
-
-  .input-group input,
-  .input-group select {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 15px;
-    padding: 8px 10px;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .input-group input:focus,
-  .input-group select:focus {
-    border-color: var(--accent);
-  }
-
-  .input-group .hint {
-    font-size: 11px;
-    color: var(--text2);
-  }
-
-  .input-group select option {
-    background: var(--bg3);
-    color: var(--text);
-  }
-
-  /* Costs grid */
-  .costs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 10px;
-    margin-top: 4px;
-  }
-
-  /* Section divider */
-  .section-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--accent);
-    margin-top: 16px;
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--border);
-    grid-column: 1 / -1;
-  }
-
-  /* Step-by-step calculation */
-  .calc-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .calc-step {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 14px;
-  }
-
-  .calc-step .step-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: var(--text2);
-    margin-bottom: 4px;
-  }
-
-  .calc-step .step-formula {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 4px;
-  }
-
-  .calc-step .step-value {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .calc-step .step-value.accent { color: var(--accent); }
-  .calc-step .step-value.green { color: var(--green); }
-  .calc-step .step-value.yellow { color: var(--yellow); }
-  .calc-step .step-value.red { color: var(--red); }
-
-  .calc-sub {
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 2px;
-    font-family: var(--mono);
-  }
-
-  /* Signal / result box */
-  .signal-box {
-    border-radius: var(--radius);
-    padding: 20px;
-    text-align: center;
-    border: 2px solid;
-    transition: all 0.3s;
-  }
-
-  .signal-box.green {
-    background: var(--green-bg);
-    border-color: var(--green);
-  }
-
-  .signal-box.yellow {
-    background: var(--yellow-bg);
-    border-color: var(--yellow);
-  }
-
-  .signal-box.red {
-    background: var(--red-bg);
-    border-color: var(--red);
-  }
-
-  .signal-box .semaphore {
-    font-size: 40px;
-    margin-bottom: 8px;
-  }
-
-  .signal-box .signal-action {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    line-height: 1.3;
-  }
-
-  .signal-box.green .signal-action { color: var(--green); }
-  .signal-box.yellow .signal-action { color: var(--yellow); }
-  .signal-box.red .signal-action { color: var(--red); }
-
-  .signal-box .signal-detail {
-    font-size: 13px;
-    color: var(--text2);
-  }
-
-  /* Result metrics row */
-  .metrics-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
-    margin-top: 14px;
-  }
-
-  .metric-card {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 12px;
-    text-align: center;
-  }
-
-  .metric-card .metric-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text2);
-    margin-bottom: 4px;
-  }
-
-  .metric-card .metric-value {
-    font-family: var(--mono);
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: var(--font);
-    transition: all 0.15s;
-    text-decoration: none;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #000;
-  }
-
-  .btn-primary:hover { filter: brightness(1.1); }
-
-  .btn-secondary {
-    background: var(--bg3);
-    color: var(--text);
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--text2);
-    background: var(--border);
-  }
-
-  .btn-danger {
-    background: transparent;
-    border-color: var(--red);
-    color: var(--red);
-  }
-
-  .btn-danger:hover { background: var(--red-bg); }
-
-  .btn-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 14px;
-  }
-
-  /* History table */
-  .history-table-wrap {
-    overflow-x: auto;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    font-family: var(--mono);
-  }
-
-  table th {
-    background: var(--bg3);
-    padding: 8px 10px;
-    text-align: right;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: var(--text2);
-    white-space: nowrap;
-    border-bottom: 1px solid var(--border);
-  }
-
-  table th:first-child { text-align: left; }
-
-  table td {
-    padding: 7px 10px;
-    text-align: right;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    white-space: nowrap;
-  }
-
-  table td:first-child { text-align: left; color: var(--text2); }
-
-  table tr:last-child td { border-bottom: none; }
-
-  table tr:hover td { background: var(--bg3); }
-
-  td.g { color: var(--green); }
-  td.y { color: var(--yellow); }
-  td.r { color: var(--red); }
-
-  /* Formulas */
-  .formula-block {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-  }
-
-  .formula-block h3 {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 6px;
-  }
-
-  .formula-block .formula-eq {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text);
-    background: var(--bg);
-    border-radius: 4px;
-    padding: 6px 10px;
-    margin-bottom: 6px;
-    word-break: break-all;
-  }
-
-  .formula-block p {
-    font-size: 12px;
-    color: var(--text2);
-    line-height: 1.5;
-  }
-
-  /* Empty state */
-  .empty {
-    text-align: center;
-    color: var(--text2);
-    padding: 30px;
-    font-size: 13px;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 480px) {
-    header h1 { font-size: 15px; }
-    .calc-step .step-value { font-size: 16px; }
-    .signal-box .signal-action { font-size: 14px; }
-    .metric-card .metric-value { font-size: 15px; }
-  }
-
-  /* Tooltip */
-  [data-tip] {
-    position: relative;
-    cursor: help;
-    border-bottom: 1px dashed var(--text2);
-  }
-
-  /* Annot */
-  .annot {
-    font-size: 11px;
-    color: var(--text2);
-    margin-top: 4px;
-    line-height: 1.4;
-  }
-
-  .tag {
-    display: inline-block;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 10px;
-    font-weight: 600;
-    margin-left: 6px;
-  }
-
-  .tag-sell { background: #1a3a5c; color: #58a6ff; }
-  .tag-buy { background: #1a3a25; color: #3fb950; }
-  .tag-no { background: #2a1a1a; color: #f85149; }
-
-  hr.divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 14px 0;
-  }
+/* ═══════════════════════════════════════════════════
+   VARIABLES GLOBALES / TAB NAV
+═══════════════════════════════════════════════════ */
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --green-bg: #0d2818;
+  --yellow: #d29922;
+  --yellow-bg: #2d2208;
+  --red: #f85149;
+  --red-bg: #2a0d0d;
+  --radius: 8px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+header h1 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+header .badge {
+  font-size: 11px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 10px;
+  color: var(--text2);
+}
+
+/* ── Tab nav ── */
+.tab-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.tab-btn {
+  padding: 8px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+
+.tab-btn:hover { color: var(--text); }
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Tab panes ── */
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ═══════════════════════════════════════════════════
+   TAB 1 — ARBITRAJE COMPLETO (estilos originales)
+═══════════════════════════════════════════════════ */
+#tab1 main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#tab1 .card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+#tab1 .card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+#tab1 .card-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+}
+
+#tab1 .card-header .toggle-icon {
+  color: var(--text2);
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+#tab1 .card-header.collapsed .toggle-icon { transform: rotate(-90deg); }
+
+#tab1 .card-body { padding: 16px; }
+#tab1 .card-body.hidden { display: none; }
+
+#tab1 .input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  #tab1 .input-grid { grid-template-columns: 1fr; }
+}
+
+#tab1 .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#tab1 .input-group.full { grid-column: 1 / -1; }
+
+#tab1 .input-group label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text2);
+}
+
+#tab1 .input-group input,
+#tab1 .input-group select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 8px 10px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#tab1 .input-group input:focus,
+#tab1 .input-group select:focus { border-color: var(--accent); }
+
+#tab1 .input-group .hint { font-size: 11px; color: var(--text2); }
+
+#tab1 .input-group select option { background: var(--bg3); color: var(--text); }
+
+#tab1 .costs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+#tab1 .section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent);
+  margin-top: 16px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  grid-column: 1 / -1;
+}
+
+#tab1 .calc-steps { display: flex; flex-direction: column; gap: 10px; }
+
+#tab1 .calc-step {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+#tab1 .calc-step .step-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; color: var(--text2); margin-bottom: 4px;
+}
+
+#tab1 .calc-step .step-formula {
+  font-family: var(--mono); font-size: 12px; color: var(--text2); margin-bottom: 4px;
+}
+
+#tab1 .calc-step .step-value {
+  font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--text);
+}
+
+#tab1 .calc-step .step-value.accent { color: var(--accent); }
+#tab1 .calc-step .step-value.green  { color: var(--green); }
+#tab1 .calc-step .step-value.yellow { color: var(--yellow); }
+#tab1 .calc-step .step-value.red    { color: var(--red); }
+#tab1 .calc-sub { font-size: 12px; color: var(--text2); margin-top: 2px; font-family: var(--mono); }
+
+#tab1 .signal-box {
+  border-radius: var(--radius); padding: 20px; text-align: center;
+  border: 2px solid; transition: all 0.3s;
+}
+#tab1 .signal-box.green  { background: var(--green-bg);  border-color: var(--green); }
+#tab1 .signal-box.yellow { background: var(--yellow-bg); border-color: var(--yellow); }
+#tab1 .signal-box.red    { background: var(--red-bg);    border-color: var(--red); }
+
+#tab1 .signal-box .semaphore { font-size: 40px; margin-bottom: 8px; }
+#tab1 .signal-box .signal-action { font-size: 16px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+#tab1 .signal-box.green  .signal-action { color: var(--green); }
+#tab1 .signal-box.yellow .signal-action { color: var(--yellow); }
+#tab1 .signal-box.red    .signal-action { color: var(--red); }
+#tab1 .signal-box .signal-detail { font-size: 13px; color: var(--text2); }
+
+#tab1 .metrics-row {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px; margin-top: 14px;
+}
+
+#tab1 .metric-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px; text-align: center;
+}
+
+#tab1 .metric-card .metric-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text2); margin-bottom: 4px;
+}
+
+#tab1 .metric-card .metric-value {
+  font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--text);
+}
+
+#tab1 .btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border);
+  cursor: pointer; font-size: 13px; font-weight: 600;
+  font-family: var(--font); transition: all 0.15s; text-decoration: none;
+}
+
+#tab1 .btn-primary { background: var(--accent); border-color: var(--accent); color: #000; }
+#tab1 .btn-primary:hover { filter: brightness(1.1); }
+#tab1 .btn-secondary { background: var(--bg3); color: var(--text); }
+#tab1 .btn-secondary:hover { border-color: var(--text2); background: var(--border); }
+#tab1 .btn-danger { background: transparent; border-color: var(--red); color: var(--red); }
+#tab1 .btn-danger:hover { background: var(--red-bg); }
+#tab1 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+#tab1 .history-table-wrap {
+  overflow-x: auto; border-radius: 6px; border: 1px solid var(--border);
+}
+
+#tab1 table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--mono); }
+#tab1 table th {
+  background: var(--bg3); padding: 8px 10px; text-align: right;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--text2); white-space: nowrap; border-bottom: 1px solid var(--border);
+}
+#tab1 table th:first-child { text-align: left; }
+#tab1 table td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; }
+#tab1 table td:first-child { text-align: left; color: var(--text2); }
+#tab1 table tr:last-child td { border-bottom: none; }
+#tab1 table tr:hover td { background: var(--bg3); }
+#tab1 td.g { color: var(--green); }
+#tab1 td.y { color: var(--yellow); }
+#tab1 td.r { color: var(--red); }
+
+#tab1 .formula-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px; margin-bottom: 10px;
+}
+#tab1 .formula-block h3 { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+#tab1 .formula-block .formula-eq {
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  background: var(--bg); border-radius: 4px; padding: 6px 10px;
+  margin-bottom: 6px; word-break: break-all;
+}
+#tab1 .formula-block p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+#tab1 .empty { text-align: center; color: var(--text2); padding: 30px; font-size: 13px; }
+
+#tab1 .annot { font-size: 11px; color: var(--text2); margin-top: 4px; line-height: 1.4; }
+
+#tab1 .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; margin-left: 6px; }
+#tab1 .tag-sell { background: #1a3a5c; color: #58a6ff; }
+#tab1 .tag-buy  { background: #1a3a25; color: #3fb950; }
+#tab1 .tag-no   { background: #2a1a1a; color: #f85149; }
+
+#tab1 hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+@media (max-width: 480px) {
+  header h1 { font-size: 15px; }
+  #tab1 .calc-step .step-value { font-size: 16px; }
+  #tab1 .signal-box .signal-action { font-size: 14px; }
+  #tab1 .metric-card .metric-value { font-size: 15px; }
+}
+
+/* ═══════════════════════════════════════════════════
+   TAB 2 — DESARBITRAJE RÁPIDO (estilos propios scoped)
+═══════════════════════════════════════════════════ */
+.t2 {
+  --t2-bg: #0a1220;
+  --t2-panel: #0f1a2c;
+  --t2-panel2: #13223a;
+  --t2-border: #22324f;
+  --t2-txt: #e7eef9;
+  --t2-muted: #8595b0;
+  --t2-label: #6f8099;
+  --t2-cyan: #3dd6f5;
+  --t2-yellow: #f6c945;
+  --t2-green: #27c281;
+  --t2-amber: #ff9f43;
+  --t2-red: #ef5b5b;
+  --t2-mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+
+  background: var(--t2-bg);
+  color: var(--t2-txt);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 16px;
+  max-width: 520px;
+  margin: 0 auto 60px;
+}
+
+.t2 h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .3px; }
+.t2 .sub { color: var(--t2-muted); font-size: 12.5px; margin: 0 0 18px; }
+
+.t2 .panel {
+  background: var(--t2-panel); border: 1px solid var(--t2-border);
+  border-radius: 12px; padding: 14px; margin-bottom: 14px;
+}
+
+.t2 .eyebrow {
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--t2-label); margin: 0 0 12px; font-weight: 600;
+}
+
+.t2 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.t2 .field label {
+  display: block; font-size: 11px; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--t2-label); margin-bottom: 5px;
+}
+
+.t2 .field input {
+  width: 100%; background: var(--t2-bg); border: 1px solid var(--t2-border);
+  border-radius: 8px; color: var(--t2-txt); font-family: var(--t2-mono);
+  font-size: 16px; padding: 9px 10px; outline: none;
+}
+
+.t2 .field input:focus { border-color: var(--t2-cyan); }
+.t2 .field .parsed { font-family: var(--t2-mono); font-size: 11px; color: var(--t2-muted); margin-top: 3px; height: 13px; }
+.t2 .full { grid-column: 1/-1; }
+
+.t2 .opt-head { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.t2 .opt-head .eyebrow { margin: 0; }
+.t2 .chev { color: var(--t2-muted); font-size: 12px; transition: transform .15s; }
+.t2 .opt-body { margin-top: 12px; }
+.t2 .hidden { display: none; }
+
+/* Verdict */
+.t2 .verdict {
+  border-radius: 12px; padding: 18px 16px; text-align: center;
+  border: 1px solid var(--t2-border); background: var(--t2-panel2); margin-bottom: 14px;
+}
+.t2 .verdict .call { font-family: var(--t2-mono); font-size: 30px; font-weight: 700; letter-spacing: 1px; line-height: 1; }
+.t2 .verdict .edge { font-family: var(--t2-mono); font-size: 15px; margin-top: 8px; color: var(--t2-muted); }
+.t2 .verdict .why  { font-size: 12.5px; color: var(--t2-muted); margin-top: 8px; }
+
+.t2 .v-green { background: rgba(39,194,129,.10); border-color: var(--t2-green); }
+.t2 .v-green .call { color: var(--t2-green); }
+.t2 .v-red   { background: rgba(239,91,91,.08);  border-color: var(--t2-red); }
+.t2 .v-red   .call { color: var(--t2-red); }
+.t2 .v-idle  .call { color: var(--t2-muted); font-size: 20px; }
+
+.t2 .bar { height: 6px; border-radius: 4px; background: #1a2840; margin-top: 14px; overflow: hidden; }
+.t2 .bar > i { display: block; height: 100%; border-radius: 4px; width: 0; transition: width .25s; }
+
+/* readout rows */
+.t2 .row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 9px 0; border-bottom: 1px solid var(--t2-border);
+}
+.t2 .row:last-child { border-bottom: 0; }
+.t2 .row .k { color: var(--t2-muted); font-size: 13px; }
+.t2 .row .v { font-family: var(--t2-mono); font-size: 15px; }
+.t2 .row .v small { color: var(--t2-muted); font-size: 11px; }
+
+.t2 .tag { font-size: 10px; padding: 2px 7px; border-radius: 5px; font-family: var(--t2-mono); margin-left: 6px; vertical-align: middle; }
+.t2 .tag.sell { background: rgba(61,214,245,.14); color: var(--t2-cyan); }
+.t2 .tag.buy  { background: rgba(246,201,69,.14); color: var(--t2-yellow); }
+
+.t2 .pos { color: var(--t2-green); }
+.t2 .neg { color: var(--t2-red); }
+
+.t2 .btns { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 4px; }
+
+.t2 button {
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  border-radius: 9px; padding: 11px; border: 1px solid var(--t2-border); cursor: pointer;
+}
+.t2 .primary { background: var(--t2-cyan); color: #06121f; border-color: var(--t2-cyan); }
+.t2 .ghost   { background: transparent; color: var(--t2-txt); }
+.t2 .mini    { font-size: 12px; padding: 7px 10px; font-weight: 500; }
+
+.t2 details.formulas {
+  background: var(--t2-panel); border: 1px solid var(--t2-border);
+  border-radius: 12px; padding: 0 14px; margin-bottom: 14px;
+}
+.t2 details.formulas summary {
+  padding: 13px 0; cursor: pointer; font-size: 12px; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--t2-label); font-weight: 600; list-style: none;
+}
+.t2 details.formulas summary::-webkit-details-marker { display: none; }
+.t2 details.formulas[open] summary { border-bottom: 1px solid var(--t2-border); }
+
+.t2 .fx { font-family: var(--t2-mono); font-size: 12.5px; color: var(--t2-muted); padding: 12px 0; line-height: 1.7; }
+.t2 .fx b { color: var(--t2-txt); font-weight: 400; }
+.t2 .fx .c { color: var(--t2-cyan); }
+.t2 .fx .y { color: var(--t2-yellow); }
+
+.t2 table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.t2 th, .t2 td {
+  text-align: right; padding: 6px 4px;
+  border-bottom: 1px solid var(--t2-border); font-family: var(--t2-mono);
+}
+.t2 th {
+  color: var(--t2-label); font-weight: 600;
+  font-size: 10px; letter-spacing: .5px; text-transform: uppercase;
+}
+.t2 td:first-child, .t2 th:first-child { text-align: left; }
+
+.t2 .hist-actions { display: flex; gap: 8px; margin-top: 12px; }
+.t2 .empty { color: var(--t2-muted); font-size: 12.5px; text-align: center; padding: 14px 0; }
+.t2 .foot  { color: var(--t2-label); font-size: 11px; text-align: center; margin: 6px 0 20px; line-height: 1.6; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Arbitraje Dólar Futuro · DLR A3/ROFEX</h1>
-  <span class="badge">Tasas en TNA · Conv. 365 días</span>
+  <div class="header-top">
+    <h1>Arbitraje DLR · A3/ROFEX</h1>
+    <span class="badge">TNA · Conv. 365 días</span>
+  </div>
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="showTab(1)">Arbitraje completo</button>
+    <button class="tab-btn"        onclick="showTab(2)">Desarbitraje rápido</button>
+  </nav>
 </header>
 
+<!-- ═══════════════ TAB 1 — ARBITRAJE COMPLETO ═══════════════ -->
+<div id="tab1" class="tab-pane active">
 <main>
 
   <!-- INPUTS -->
@@ -536,7 +535,7 @@
         <div class="input-group">
           <label>Nominal a operar (USD)</label>
           <input type="number" id="nominal" placeholder="10000" step="1000" min="1000">
-          <span class="hint">1 contrato = USD 1.000 — ingresá múltiplos de 1.000</span>
+          <span class="hint">1 contrato = USD 1.000 — múltiplos de 1.000</span>
         </div>
 
         <div class="section-label">Tasa en pesos (benchmark)</div>
@@ -585,7 +584,7 @@
           </div>
         </div>
 
-      </div><!-- /input-grid -->
+      </div>
 
       <div class="btn-row">
         <button class="btn btn-primary" onclick="calcular()">Calcular</button>
@@ -649,19 +648,19 @@
       <div class="formula-block">
         <h3>1 · Tasa implícita del futuro (TNA)</h3>
         <div class="formula-eq">TNA_impl = (futuro / spot − 1) × (365 / días) × 100</div>
-        <p>La tasa que "descuenta" el mercado de futuros: si comprás dólares hoy a <em>spot</em> y vendés el contrato de futuro a <em>futuro</em>, en <em>días</em> días obtenés esta tasa anualizada en pesos sin riesgo cambiario (cubierto).</p>
+        <p>La tasa que "descuenta" el mercado de futuros: si comprás dólares hoy a <em>spot</em> y vendés el contrato de futuro a <em>futuro</em>, en <em>días</em> días obtenés esta tasa anualizada en pesos sin riesgo cambiario.</p>
       </div>
 
       <div class="formula-block">
         <h3>2 · Tasa implícita del futuro (TEA)</h3>
         <div class="formula-eq">TEA_impl = (1 + TNA_impl × días / 36500) ^ (365/días) − 1</div>
-        <p>Equivalente efectivo anual de la misma tasa. Permite comparar con instrumentos que capitalizan. No se usa en el spread (que va TNA vs TNA) pero se muestra como referencia.</p>
+        <p>Equivalente efectivo anual. Permite comparar con instrumentos que capitalizan.</p>
       </div>
 
       <div class="formula-block">
         <h3>3 · Spread bruto</h3>
         <div class="formula-eq">Spread_bruto = TNA_impl − TNA_pesos (en puntos porcentuales)</div>
-        <p>Diferencia entre lo que "paga" la posición cubierta en futuros y lo que paga la alternativa en pesos. Positivo → el futuro paga más. Negativo → el futuro paga menos (conviene colocar pesos y comprar futuro).</p>
+        <p>Diferencia entre lo que paga la posición cubierta en futuros y la alternativa en pesos.</p>
       </div>
 
       <div class="formula-block">
@@ -670,56 +669,200 @@
 cost_total_pesos = nominal_USD × spot × (sum_comisiones) × (1 + IVA/100)
 cost_TNA = (cost_total_pesos / (nominal_USD × spot)) × (365 / días) × 100
         </div>
-        <p>Las comisiones se aplican sobre el nocional en pesos (nominal_USD × spot). Se anualizan dividiendo por el mismo nocional y escalando a 365 días. El IVA se aplica únicamente sobre las comisiones (no sobre el nocional). El arancel de caución solo se suma si la pata en pesos es caución.</p>
+        <p>Las comisiones se aplican sobre el nocional en pesos y se anualizan. IVA aplica solo sobre comisiones. Arancel caución solo si la pata en pesos es caución.</p>
       </div>
 
       <div class="formula-block">
         <h3>5 · Spread neto</h3>
         <div class="formula-eq">Spread_neto = Spread_bruto − cost_TNA</div>
-        <p>Ganancia real en puntos porcentuales anualizados, después de todos los costos. Es la variable de decisión: si es positivo, el arbitraje genera retorno adicional sobre la tasa de referencia en pesos.</p>
+        <p>Ganancia real en puntos porcentuales anualizados, después de todos los costos.</p>
       </div>
 
       <div class="formula-block">
         <h3>6 · Resultado esperado en pesos</h3>
-        <div class="formula-eq">
-resultado_pesos = nominal_USD × spot × spread_neto/100 × días/365
-        </div>
-        <p>Pesos adicionales que genera el arbitraje en el período, neto de costos. No incluye el retorno de la tasa base (que se obtiene en la pata en pesos), solo el <em>exceso</em> de la posición cubierta.</p>
+        <div class="formula-eq">resultado_pesos = nominal_USD × spot × spread_neto/100 × días/365</div>
+        <p>Pesos adicionales generados por el arbitraje en el período, neto de costos.</p>
       </div>
 
       <div class="formula-block">
         <h3>7 · Garantía estimada</h3>
         <div class="formula-eq">garantia_pesos = nominal_USD × spot × garantia_pct / 100</div>
-        <p>Monto en pesos que hay que inmovilizar como margen de garantía ante A3/ROFEX. En la práctica puede integrarse con cauciones (la garantía también devenga tasa). El porcentaje varía según el activo y la volatilidad del momento.</p>
+        <p>Margen a inmovilizar en A3/ROFEX. Puede integrarse con valores que devenguen tasa.</p>
       </div>
 
       <div class="formula-block">
-        <h3>8 · Punto de equilibrio (breakeven)</h3>
+        <h3>8 · Breakeven</h3>
         <div class="formula-eq">Breakeven_spread = cost_TNA</div>
-        <p>El spread bruto mínimo para que el arbitraje sea al menos neutral en costos. Por debajo, la operación destruye valor.</p>
+        <p>El spread bruto mínimo para que el arbitraje sea neutral en costos.</p>
       </div>
 
       <hr class="divider">
 
       <div class="formula-block">
         <h3>Convención de tasas</h3>
-        <p>Todas las tasas son <strong>TNA simple, base 365 días</strong> (convención argentina estándar para cauciones y mercado de futuros). No se usa base 360. La comparación entre TNA implícita y TNA de referencia es directa.</p>
+        <p>Todas las tasas son <strong>TNA simple, base 365 días</strong> (convención argentina estándar).</p>
       </div>
 
       <div class="formula-block">
         <h3>Señal de arbitraje</h3>
-        <p><strong>TNA_impl &gt; TNA_pesos:</strong> vendés futuro (cubrís dólares al precio alto) + colocás los USD en algún instrumento. Cobrás la tasa implícita del futuro.<br><br>
-        <strong>TNA_impl &lt; TNA_pesos:</strong> comprás futuro (cubrís los pesos al precio bajo) + colocás pesos a la tasa de referencia. Cobrás la tasa en pesos con cobertura cambiaria.<br><br>
-        En ambos casos el spread neto debe ser positivo para que la operación tenga sentido.</p>
+        <p><strong>TNA_impl &gt; TNA_pesos:</strong> vendés futuro + colocás los USD.<br><br>
+        <strong>TNA_impl &lt; TNA_pesos:</strong> comprás futuro + colocás pesos a la tasa de referencia.<br><br>
+        En ambos casos el spread neto debe ser positivo.</p>
       </div>
 
     </div>
   </div>
 
 </main>
+</div>
+
+<!-- ═══════════════ TAB 2 — DESARBITRAJE RÁPIDO ═══════════════ -->
+<div id="tab2" class="tab-pane">
+<div class="t2">
+
+<h1>Desarbitraje DLR vs Caución</h1>
+<p class="sub">Mirá de un vistazo si el futuro de dólar está caro o barato contra tu tasa de caución. Ingresás bid y ask para ver ambos lados.</p>
+
+<div class="panel">
+  <p class="eyebrow">Datos de mercado</p>
+  <div class="grid">
+    <div class="field full">
+      <label>Spot MAE (mayorista)</label>
+      <input id="t2_spot" inputmode="decimal" placeholder="1433">
+      <div class="parsed" id="t2_spot_p"></div>
+    </div>
+    <div class="field bid">
+      <label>Futuro DLR — Compra (bid)</label>
+      <input id="t2_bid" inputmode="decimal" placeholder="1443">
+      <div class="parsed" id="t2_bid_p"></div>
+    </div>
+    <div class="field ask">
+      <label>Futuro DLR — Venta (ask)</label>
+      <input id="t2_ask" inputmode="decimal" placeholder="1443,5">
+      <div class="parsed" id="t2_ask_p"></div>
+    </div>
+    <div class="field">
+      <label>Días al vencimiento</label>
+      <input id="t2_dias" inputmode="decimal" placeholder="14">
+      <div class="parsed" id="t2_dias_p"></div>
+    </div>
+    <div class="field">
+      <label>Caución TNA (%)</label>
+      <input id="t2_cau" inputmode="decimal" placeholder="16,37">
+      <div class="parsed" id="t2_cau_p"></div>
+    </div>
+    <div class="field full">
+      <label>Derechos de mercado A3 (% sobre nocional)</label>
+      <input id="t2_der" inputmode="decimal" placeholder="0,02">
+      <div class="parsed" id="t2_der_p"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="opt-head" onclick="T2.toggleOpt()">
+    <p class="eyebrow">Sizing (opcional)</p>
+    <span class="chev" id="t2_chev">▾</span>
+  </div>
+  <div class="opt-body hidden" id="t2_optBody">
+    <div class="grid">
+      <div class="field">
+        <label>Nominal (USD)</label>
+        <input id="t2_nom" inputmode="decimal" placeholder="100000">
+        <div class="parsed" id="t2_nom_p"></div>
+      </div>
+      <div class="field">
+        <label>Garantía exigida (%)</label>
+        <input id="t2_gar" inputmode="decimal" placeholder="18">
+        <div class="parsed" id="t2_gar_p"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="verdict v-idle" id="t2_verdict">
+  <div class="call" id="t2_vCall">—</div>
+  <div class="edge" id="t2_vEdge"></div>
+  <div class="why"  id="t2_vWhy">Completá los datos de mercado.</div>
+  <div class="bar"><i id="t2_vBar"></i></div>
+</div>
+
+<div class="panel" id="t2_readout" style="display:none">
+  <p class="eyebrow">Lectura</p>
+  <div class="row"><span class="k">Base (futuro − spot)<span class="tag sell">bid</span></span><span class="v" id="t2_rBaseBid"></span></div>
+  <div class="row"><span class="k">Implícita vendiendo<span class="tag sell">bid</span></span><span class="v" id="t2_rImpBid"></span></div>
+  <div class="row"><span class="k">Implícita comprando<span class="tag buy">ask</span></span><span class="v" id="t2_rImpAsk"></span></div>
+  <div class="row"><span class="k">Tu caución (referencia)</span><span class="v" id="t2_rCau"></span></div>
+  <div class="row"><span class="k">Costo A3 anualizado</span><span class="v" id="t2_rCost"></span></div>
+  <div class="row"><span class="k">Edge neto vendiendo</span><span class="v" id="t2_rEdgeSell"></span></div>
+  <div class="row"><span class="k">Edge neto comprando</span><span class="v" id="t2_rEdgeBuy"></span></div>
+  <div class="row" id="t2_rowResult" style="display:none"><span class="k">Resultado neto estimado</span><span class="v" id="t2_rResult"></span></div>
+  <div class="row" id="t2_rowGar"    style="display:none"><span class="k">Garantía inmovilizada</span><span class="v" id="t2_rGar"></span></div>
+</div>
+
+<div class="btns">
+  <button class="primary" onclick="T2.guardar()">Guardar en historial</button>
+  <button class="ghost"   onclick="T2.limpiar()">Limpiar</button>
+</div>
+
+<details class="formulas">
+  <summary>Fórmulas (cómo sale cada número)</summary>
+  <div class="fx">
+    <b>Implícita</b> = (futuro / spot − 1) × 365 / días<br>
+    &nbsp;&nbsp;· vendiendo usa el <span class="c">bid</span> (te ejecutan en la compra del libro)<br>
+    &nbsp;&nbsp;· comprando usa el <span class="y">ask</span> (pagás la venta del libro)<br><br>
+    <b>Costo A3 (TNA)</b> = derechos % × 365 / días<br>
+    &nbsp;&nbsp;<span style="color:var(--t2-label)">(se anualiza para compararlo contra la tasa)</span><br><br>
+    <b>Edge vendiendo</b> = implícita(bid) − caución − costo<br>
+    <b>Edge comprando</b> = caución − implícita(ask) − costo<br><br>
+    <b>Señal</b>: gana el lado con edge positivo.<br>
+    &nbsp;&nbsp;· implícita &gt; caución → <span class="c">VENDER</span> futuro<br>
+    &nbsp;&nbsp;· implícita &lt; caución → <span class="y">COMPRAR</span> futuro<br>
+    &nbsp;&nbsp;· ninguno supera el costo → NO CONVIENE<br><br>
+    <b>Resultado</b> = nominal × spot × edge/100 × días/365<br>
+    <b>Garantía</b> = nominal × spot × garantía%<br><br>
+    <span style="color:var(--t2-label)">Convención: 365 días, TNA simple. El único costo por trade cargado acá es A3 (derechos de mercado).</span>
+  </div>
+</details>
+
+<div class="panel">
+  <p class="eyebrow">Historial</p>
+  <div id="t2_histWrap"><div class="empty">Sin cálculos guardados todavía.</div></div>
+  <div class="hist-actions">
+    <button class="ghost mini" onclick="T2.exportCSV()">Exportar CSV</button>
+    <button class="ghost mini" onclick="T2.borrarHist()">Borrar historial</button>
+  </div>
+</div>
+
+<p class="foot">El spot lo leés en marketdata.mae.com.ar y lo cargás a mano.<br>Herramienta de cálculo, no recomendación. La decisión es tuya.</p>
+
+</div><!-- /.t2 -->
+</div><!-- /#tab2 -->
 
 <script>
-// ─── State ────────────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════════════ */
+function showTab(n) {
+  document.querySelectorAll('.tab-pane').forEach((p, i) => {
+    p.classList.toggle('active', i + 1 === n);
+  });
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', i + 1 === n);
+  });
+  localStorage.setItem('arb_active_tab', n);
+}
+
+// Restore last active tab
+(function() {
+  const saved = parseInt(localStorage.getItem('arb_active_tab') || '1');
+  if (saved === 2) showTab(2);
+})();
+
+/* ═══════════════════════════════════════════════════
+   TAB 1 — ARBITRAJE COMPLETO
+═══════════════════════════════════════════════════ */
 const FIELDS = ['spot','futuro','dias','nominal','tipoPata','tasaPesos',
   'comFuturo','comSpot','derechosMercado','comCaucion','ivaComisiones','garantia'];
 
@@ -729,13 +872,9 @@ const DEFAULTS = {
   comCaucion: '0.10', ivaComisiones: '21', garantia: '18'
 };
 
-// ─── Persistence ──────────────────────────────────────────────────────────────
 function saveInputs() {
   const data = {};
-  FIELDS.forEach(id => {
-    const el = document.getElementById(id);
-    data[id] = el ? el.value : '';
-  });
+  FIELDS.forEach(id => { const el = document.getElementById(id); data[id] = el ? el.value : ''; });
   localStorage.setItem('arb_inputs', JSON.stringify(data));
 }
 
@@ -751,24 +890,18 @@ function loadInputs() {
 
 function resetInputs() {
   if (!confirm('¿Restablecer todos los valores a los predeterminados?')) return;
-  FIELDS.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = DEFAULTS[id];
-  });
+  FIELDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = DEFAULTS[id]; });
   saveInputs();
   clearResults();
 }
 
-// ─── UI helpers ───────────────────────────────────────────────────────────────
 function toggleCard(name) {
   const body = document.getElementById('body-' + name);
   const header = body.previousElementSibling;
   if (body.classList.contains('hidden')) {
-    body.classList.remove('hidden');
-    header.classList.remove('collapsed');
+    body.classList.remove('hidden'); header.classList.remove('collapsed');
   } else {
-    body.classList.add('hidden');
-    header.classList.add('collapsed');
+    body.classList.add('hidden'); header.classList.add('collapsed');
   }
 }
 
@@ -776,64 +909,46 @@ function fmt(n, dec=2) {
   if (n === null || n === undefined || isNaN(n)) return '—';
   return n.toLocaleString('es-AR', {minimumFractionDigits: dec, maximumFractionDigits: dec});
 }
-
-function fmtPct(n, dec=2) { return fmt(n, dec) + '%'; }
-
+function fmtPct(n, dec=2)  { return fmt(n, dec) + '%'; }
 function fmtPesos(n) {
   if (n === null || isNaN(n)) return '—';
   return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
 }
 
-// ─── Tip pata en pesos ────────────────────────────────────────────────────────
 document.getElementById('tipoPata').addEventListener('change', function() {
   const isCaucion = this.value === 'caucion';
   document.getElementById('group-caucion').style.display = isCaucion ? '' : 'none';
   document.getElementById('hint-tasa').textContent =
     isCaucion ? 'TNA simple caución colocadora, base 365' :
-    this.value === 'lecap' ? 'TNA equivalente de la LECAP, base 365' :
-    'TNA simple, base 365';
+    this.value === 'lecap' ? 'TNA equivalente de la LECAP, base 365' : 'TNA simple, base 365';
   saveInputs();
 });
 
-// ─── Auto-save on input change ────────────────────────────────────────────────
 FIELDS.forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', saveInputs);
 });
 
-// ─── Core calculation ─────────────────────────────────────────────────────────
 function getNum(id) { return parseFloat(document.getElementById(id).value); }
 
 function calcular() {
-  const spot = getNum('spot');
-  const futuro = getNum('futuro');
-  const dias = getNum('dias');
-  const nominal = getNum('nominal');
-  const tasaPesos = getNum('tasaPesos');
-  const comFuturo = getNum('comFuturo');
-  const comSpot = getNum('comSpot');
-  const derechosMercado = getNum('derechosMercado');
-  const comCaucion = getNum('comCaucion');
-  const ivaComisiones = getNum('ivaComisiones');
-  const garantiaPct = getNum('garantia');
+  const spot = getNum('spot'), futuro = getNum('futuro'), dias = getNum('dias');
+  const nominal = getNum('nominal'), tasaPesos = getNum('tasaPesos');
+  const comFuturo = getNum('comFuturo'), comSpot = getNum('comSpot');
+  const derechosMercado = getNum('derechosMercado'), comCaucion = getNum('comCaucion');
+  const ivaComisiones = getNum('ivaComisiones'), garantiaPct = getNum('garantia');
   const tipoPata = document.getElementById('tipoPata').value;
   const isCaucion = tipoPata === 'caucion';
 
-  // Validate
   if ([spot, futuro, dias, nominal, tasaPesos].some(isNaN) || dias <= 0 || spot <= 0 || futuro <= 0) {
     alert('Completá los campos obligatorios: spot, futuro, días, nominal y tasa en pesos.');
     return;
   }
 
-  // 1. Tasa implícita
   const tna_impl = (futuro / spot - 1) * (365 / dias) * 100;
   const tea_impl = (Math.pow(1 + tna_impl * dias / 36500, 365 / dias) - 1) * 100;
-
-  // 2. Spread bruto
   const spread_bruto = tna_impl - tasaPesos;
 
-  // 3. Costos
-  // Sum of commission rates (as %)
   let sumComisiones = comFuturo + comSpot + derechosMercado;
   if (isCaucion && !isNaN(comCaucion)) sumComisiones += comCaucion;
 
@@ -841,17 +956,9 @@ function calcular() {
   const iva = isNaN(ivaComisiones) ? 21 : ivaComisiones;
   const cost_total_pesos = nocional_pesos * (sumComisiones / 100) * (1 + iva / 100);
   const cost_tna = (cost_total_pesos / nocional_pesos) * (365 / dias) * 100;
-
-  // 4. Spread neto
   const spread_neto = spread_bruto - cost_tna;
-
-  // 5. Resultado en pesos
   const resultado_pesos = nocional_pesos * (spread_neto / 100) * (dias / 365);
-
-  // 6. Garantía
   const garantia_pesos = nocional_pesos * (garantiaPct / 100);
-
-  // 7. Contratos
   const contratos = Math.round(nominal / 1000);
 
   renderCalcSteps({
@@ -864,16 +971,12 @@ function calcular() {
 
   renderResult({tna_impl, tasaPesos, spread_bruto, cost_tna, spread_neto, resultado_pesos, garantia_pesos, contratos});
 
-  // Make result visible
   const resultBody = document.getElementById('body-result');
-  const resultHeader = resultBody.previousElementSibling;
   resultBody.classList.remove('hidden');
-  resultHeader.classList.remove('collapsed');
+  resultBody.previousElementSibling.classList.remove('collapsed');
 
-  return {
-    spot, futuro, dias, nominal, tasaPesos, tna_impl, tea_impl,
-    spread_bruto, cost_tna, spread_neto, resultado_pesos, garantia_pesos, contratos, tipoPata
-  };
+  return { spot, futuro, dias, nominal, tasaPesos, tna_impl, tea_impl,
+    spread_bruto, cost_tna, spread_neto, resultado_pesos, garantia_pesos, contratos, tipoPata };
 }
 
 function clearResults() {
@@ -881,7 +984,6 @@ function clearResults() {
   document.getElementById('result-content').innerHTML = '<div class="empty">Esperando cálculo...</div>';
 }
 
-// ─── Render calculation steps ─────────────────────────────────────────────────
 function renderCalcSteps(r) {
   const costsBreakdown = [
     `Com. ALyC futuro: ${fmt(r.comFuturo)}%`,
@@ -901,73 +1003,63 @@ function renderCalcSteps(r) {
       <div class="step-value accent">${fmtPct(r.tna_impl)} TNA</div>
       <div class="calc-sub">TEA equivalente: ${fmtPct(r.tea_impl)} · ${r.contratos} contrato${r.contratos !== 1 ? 's' : ''} (${fmtPesos(r.nominal)} USD)</div>
     </div>
-
     <div class="calc-step">
       <div class="step-label">Paso 2 — Tasa de referencia en pesos</div>
       <div class="step-formula">Instrumento: ${r.tipoPata === 'caucion' ? 'Caución colocadora' : r.tipoPata === 'lecap' ? 'LECAP / Bono CER' : 'Otra tasa'}</div>
       <div class="step-value accent">${fmtPct(r.tasaPesos)} TNA</div>
     </div>
-
     <div class="calc-step">
       <div class="step-label">Paso 3 — Spread bruto</div>
       <div class="step-formula">Spread_bruto = TNA_implícita − TNA_pesos</div>
       <div class="step-formula">Spread_bruto = ${fmtPct(r.tna_impl)} − ${fmtPct(r.tasaPesos)}</div>
       <div class="step-value ${r.spread_bruto >= 0 ? 'green' : 'red'}">${r.spread_bruto >= 0 ? '+' : ''}${fmtPct(r.spread_bruto)} pp</div>
     </div>
-
     <div class="calc-step">
       <div class="step-label">Paso 4 — Costos totales anualizados</div>
-      <div class="step-formula">Nocional en pesos = ${r.contratos} contratos × ${fmt(r.spot)} = ${fmtPesos(r.nocional_pesos)}</div>
+      <div class="step-formula">Nocional = ${r.contratos} contratos × ${fmt(r.spot)} = ${fmtPesos(r.nocional_pesos)}</div>
       <div class="step-formula">Comisiones aplicadas: ${costsBreakdown}</div>
-      <div class="step-formula">Suma tasas de comisión = ${fmtPct(r.sumComisiones,3)} × (1 + ${fmtPct(r.iva)}) = ${fmtPct(r.sumComisiones * (1 + r.iva/100),3)}</div>
-      <div class="step-formula">Cost. totales = ${fmtPesos(r.nocional_pesos)} × ${fmtPct(r.sumComisiones * (1 + r.iva/100),3)} = ${fmtPesos(r.cost_total_pesos)}</div>
-      <div class="step-formula">Cost. anualizados TNA = (${fmtPesos(r.cost_total_pesos)} / ${fmtPesos(r.nocional_pesos)}) × 365/${r.dias} × 100</div>
+      <div class="step-formula">Suma tasas × (1 + IVA) = ${fmtPct(r.sumComisiones,3)} × ${fmt(1 + r.iva/100,4)} = ${fmtPct(r.sumComisiones * (1 + r.iva/100),3)}</div>
+      <div class="step-formula">Cost. totales = ${fmtPesos(r.cost_total_pesos)}</div>
+      <div class="step-formula">Cost. anualizados TNA = (cost/nocional) × 365/${r.dias} × 100</div>
       <div class="step-value yellow">${fmtPct(r.cost_tna)} TNA</div>
     </div>
-
     <div class="calc-step">
       <div class="step-label">Paso 5 — Spread neto (después de costos)</div>
-      <div class="step-formula">Spread_neto = Spread_bruto − Costos_TNA</div>
       <div class="step-formula">Spread_neto = ${fmtPct(r.spread_bruto)} − ${fmtPct(r.cost_tna)}</div>
       <div class="step-value ${col}">${r.spread_neto >= 0 ? '+' : ''}${fmtPct(r.spread_neto)} pp</div>
-      <div class="annot">Breakeven: el spread bruto mínimo para cubrir costos es ${fmtPct(r.cost_tna)}</div>
+      <div class="annot">Breakeven: necesitás al menos ${fmtPct(r.cost_tna)} de spread bruto para cubrir costos.</div>
     </div>
-
     <div class="calc-step">
-      <div class="step-label">Paso 6 — Resultado en pesos (sobre el período)</div>
+      <div class="step-label">Paso 6 — Resultado en pesos (período)</div>
       <div class="step-formula">Resultado = ${fmtPesos(r.nocional_pesos)} × ${fmtPct(r.spread_neto)} × ${r.dias}/365</div>
       <div class="step-value ${col}">${r.resultado_pesos >= 0 ? '+' : ''}${fmtPesos(r.resultado_pesos)}</div>
       <div class="annot">Ganancia adicional sobre la tasa base, neto de costos, en los ${r.dias} días del período.</div>
     </div>
-
     <div class="calc-step">
       <div class="step-label">Paso 7 — Garantía estimada a inmovilizar</div>
       <div class="step-formula">Garantía = ${fmtPesos(r.nocional_pesos)} × ${fmtPct(r.garantiaPct)} = ${fmtPesos(r.garantia_pesos)}</div>
       <div class="step-value accent">${fmtPesos(r.garantia_pesos)}</div>
-      <div class="annot">Margen exigido por A3/ROFEX. Puede integrarse con valores (bonos, cauciones) que también devenguen tasa.</div>
+      <div class="annot">Margen exigido por A3/ROFEX. Puede integrarse con bonos o cauciones.</div>
     </div>
   `;
 }
 
-// ─── Render signal / result ───────────────────────────────────────────────────
 function renderResult(r) {
   let color, semaphore, action, detail;
-
   if (r.spread_neto <= 0) {
-    color = 'red';
-    semaphore = '🔴';
+    color = 'red'; semaphore = '🔴';
     action = 'NO CONVIENE — los costos se comen el spread';
     detail = `Spread neto: ${fmtPct(r.spread_neto)} pp. Necesitás al menos ${fmtPct(r.cost_tna)} de spread bruto para cubrir costos.`;
   } else if (r.tna_impl > r.tasaPesos) {
     color = r.spread_neto > 1 ? 'green' : 'yellow';
     semaphore = r.spread_neto > 1 ? '🟢' : '🟡';
     action = 'VENDER FUTURO + armar pata en dólares';
-    detail = `Cobrás la tasa implícita del futuro (${fmtPct(r.tna_impl)} TNA) y pagás la tasa de referencia. Spread neto: ${fmtPct(r.spread_neto)} pp.`;
+    detail = `Cobrás la tasa implícita del futuro (${fmtPct(r.tna_impl)} TNA). Spread neto: ${fmtPct(r.spread_neto)} pp.`;
   } else {
     color = r.spread_neto > 1 ? 'green' : 'yellow';
     semaphore = r.spread_neto > 1 ? '🟢' : '🟡';
     action = 'COMPRAR FUTURO + colocar pesos';
-    detail = `Colocás pesos a la tasa de referencia (${fmtPct(r.tasaPesos)} TNA) con cobertura cambiaria vía futuro. Spread neto: ${fmtPct(r.spread_neto)} pp.`;
+    detail = `Colocás pesos a ${fmtPct(r.tasaPesos)} TNA con cobertura cambiaria vía futuro. Spread neto: ${fmtPct(r.spread_neto)} pp.`;
   }
 
   document.getElementById('result-content').innerHTML = `
@@ -977,65 +1069,28 @@ function renderResult(r) {
       <div class="signal-detail">${detail}</div>
     </div>
     <div class="metrics-row">
-      <div class="metric-card">
-        <div class="metric-label">TNA implícita</div>
-        <div class="metric-value">${fmtPct(r.tna_impl)}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">TNA referencia</div>
-        <div class="metric-value">${fmtPct(r.tasaPesos)}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Spread bruto</div>
-        <div class="metric-value">${r.spread_bruto >= 0 ? '+' : ''}${fmtPct(r.spread_bruto)}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Costos TNA</div>
-        <div class="metric-value">${fmtPct(r.cost_tna)}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Spread neto</div>
-        <div class="metric-value" style="color:var(--${color === 'red' ? 'red' : color === 'yellow' ? 'yellow' : 'green'})">${r.spread_neto >= 0 ? '+' : ''}${fmtPct(r.spread_neto)}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Resultado en $</div>
-        <div class="metric-value">${r.resultado_pesos >= 0 ? '+' : ''}${fmtPesos(r.resultado_pesos)}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Contratos</div>
-        <div class="metric-value">${r.contratos}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Garantía est.</div>
-        <div class="metric-value">${fmtPesos(r.garantia_pesos)}</div>
-      </div>
+      <div class="metric-card"><div class="metric-label">TNA implícita</div><div class="metric-value">${fmtPct(r.tna_impl)}</div></div>
+      <div class="metric-card"><div class="metric-label">TNA referencia</div><div class="metric-value">${fmtPct(r.tasaPesos)}</div></div>
+      <div class="metric-card"><div class="metric-label">Spread bruto</div><div class="metric-value">${r.spread_bruto >= 0 ? '+' : ''}${fmtPct(r.spread_bruto)}</div></div>
+      <div class="metric-card"><div class="metric-label">Costos TNA</div><div class="metric-value">${fmtPct(r.cost_tna)}</div></div>
+      <div class="metric-card"><div class="metric-label">Spread neto</div><div class="metric-value" style="color:var(--${color === 'red' ? 'red' : color === 'yellow' ? 'yellow' : 'green'})">${r.spread_neto >= 0 ? '+' : ''}${fmtPct(r.spread_neto)}</div></div>
+      <div class="metric-card"><div class="metric-label">Resultado en $</div><div class="metric-value">${r.resultado_pesos >= 0 ? '+' : ''}${fmtPesos(r.resultado_pesos)}</div></div>
+      <div class="metric-card"><div class="metric-label">Contratos</div><div class="metric-value">${r.contratos}</div></div>
+      <div class="metric-card"><div class="metric-label">Garantía est.</div><div class="metric-value">${fmtPesos(r.garantia_pesos)}</div></div>
     </div>
   `;
 }
 
-// ─── History ──────────────────────────────────────────────────────────────────
-function getHistory() {
-  const raw = localStorage.getItem('arb_history');
-  return raw ? JSON.parse(raw) : [];
-}
-
-function saveHistory(hist) {
-  localStorage.setItem('arb_history', JSON.stringify(hist));
-}
+function getHistory() { const r = localStorage.getItem('arb_history'); return r ? JSON.parse(r) : []; }
+function saveHistory(h) { localStorage.setItem('arb_history', JSON.stringify(h)); }
 
 function guardarCalculo() {
   const result = calcular();
   if (!result) return;
-
   const hist = getHistory();
-  hist.unshift({
-    ts: new Date().toISOString(),
-    ...result
-  });
+  hist.unshift({ ts: new Date().toISOString(), ...result });
   saveHistory(hist);
   renderHistory();
-
-  // Flash feedback
   const btn = event.target;
   btn.textContent = '✓ Guardado';
   setTimeout(() => { btn.textContent = 'Guardar en historial'; }, 1500);
@@ -1050,57 +1105,32 @@ function clearHistory() {
 function renderHistory() {
   const hist = getHistory();
   const el = document.getElementById('history-content');
-
-  if (!hist.length) {
-    el.innerHTML = '<div class="empty">No hay cálculos guardados.</div>';
-    return;
-  }
-
+  if (!hist.length) { el.innerHTML = '<div class="empty">No hay cálculos guardados.</div>'; return; }
   const rows = hist.map(h => {
     const col = h.spread_neto > 1 ? 'g' : h.spread_neto > 0 ? 'y' : 'r';
-    const señal = h.spread_neto <= 0 ? 'No conv.' :
-      h.tna_impl > h.tasaPesos ? 'Vender fut.' : 'Comprar fut.';
+    const señal = h.spread_neto <= 0 ? 'No conv.' : h.tna_impl > h.tasaPesos ? 'Vender fut.' : 'Comprar fut.';
     const date = new Date(h.ts).toLocaleString('es-AR', {dateStyle:'short', timeStyle:'short'});
     return `<tr>
-      <td>${date}</td>
-      <td>${fmt(h.spot)}</td>
-      <td>${fmt(h.futuro)}</td>
-      <td>${h.dias}</td>
-      <td>${fmtPct(h.tna_impl)}</td>
-      <td>${fmtPct(h.tasaPesos)}</td>
+      <td>${date}</td><td>${fmt(h.spot)}</td><td>${fmt(h.futuro)}</td><td>${h.dias}</td>
+      <td>${fmtPct(h.tna_impl)}</td><td>${fmtPct(h.tasaPesos)}</td>
       <td>${fmtPct(h.spread_bruto)}</td>
       <td class="${col}">${fmtPct(h.spread_neto)}</td>
       <td class="${col}">${señal}</td>
     </tr>`;
   }).join('');
-
   el.innerHTML = `
-    <div class="history-table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Spot</th>
-            <th>Futuro</th>
-            <th>Días</th>
-            <th>TNA impl.</th>
-            <th>TNA ref.</th>
-            <th>Spread bruto</th>
-            <th>Spread neto</th>
-            <th>Señal</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
+    <div class="history-table-wrap"><table>
+      <thead><tr>
+        <th>Fecha</th><th>Spot</th><th>Futuro</th><th>Días</th>
+        <th>TNA impl.</th><th>TNA ref.</th><th>Spread bruto</th><th>Spread neto</th><th>Señal</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
 }
 
-// ─── Export CSV ───────────────────────────────────────────────────────────────
 function exportCSV() {
   const hist = getHistory();
   if (!hist.length) { alert('No hay historial para exportar.'); return; }
-
   const headers = ['Fecha','Spot','Futuro','Días','Nominal USD','TNA impl %','TNA ref %',
     'Spread bruto %','Costos TNA %','Spread neto %','Resultado $','Garantía $','Contratos','Instrumento'];
   const rows = hist.map(h => [
@@ -1111,23 +1141,181 @@ function exportCSV() {
     Math.round(h.resultado_pesos), Math.round(h.garantia_pesos),
     h.contratos, h.tipoPata
   ].map(v => `"${v}"`).join(','));
-
   const csv = [headers.join(','), ...rows].join('\n');
   const blob = new Blob(['﻿' + csv], {type: 'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `arbitraje-dlr-${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  a.href = url; a.download = `arbitraje-dlr-${new Date().toISOString().slice(0,10)}.csv`; a.click();
   URL.revokeObjectURL(url);
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
 loadInputs();
 renderHistory();
-
-// Trigger tipo pata display update
 document.getElementById('tipoPata').dispatchEvent(new Event('change'));
+
+/* ═══════════════════════════════════════════════════
+   TAB 2 — DESARBITRAJE RÁPIDO (namespace T2)
+═══════════════════════════════════════════════════ */
+const T2 = (() => {
+  const K_IN = 't2_dlr_arb_inputs_v1';
+  const K_HI = 't2_dlr_arb_hist_v1';
+  const FS = ['t2_spot','t2_bid','t2_ask','t2_dias','t2_cau','t2_der','t2_nom','t2_gar'];
+
+  const $ = id => document.getElementById(id);
+
+  function parseAR(s) {
+    if (s == null) return NaN;
+    s = s.toString().trim(); if (!s) return NaN;
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',','.');
+    else if (s.includes(',')) s = s.replace(',','.');
+    return parseFloat(s);
+  }
+
+  const fmtN = (n, d=2) => isFinite(n) ? n.toLocaleString('es-AR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
+  const pct  = n => isFinite(n) ? fmtN(n,2) + ' %' : '—';
+
+  function calc(inp) {
+    const {spot, bid, ask, dias, cau, der, nom, gar} = inp;
+    const ok = spot > 0 && bid > 0 && ask > 0 && dias > 0;
+    if (!ok) return {ok: false};
+    const annual = 365 / dias;
+    const impBid  = (bid/spot - 1) * annual * 100;
+    const impAsk  = (ask/spot - 1) * annual * 100;
+    const costTNA = (isFinite(der) ? der : 0) * annual;
+    const cauV    = isFinite(cau) ? cau : 0;
+    const edgeSell = impBid - cauV - costTNA;
+    const edgeBuy  = cauV - impAsk - costTNA;
+    let dir, edge, side;
+    if (edgeSell > 0 && edgeSell >= edgeBuy) { dir = 'VENDER'; edge = edgeSell; side = 'sell'; }
+    else if (edgeBuy > 0)                    { dir = 'COMPRAR'; edge = edgeBuy;  side = 'buy'; }
+    else                                     { dir = 'NO CONVIENE'; edge = Math.max(edgeSell, edgeBuy); side = null; }
+    let result = NaN, garPesos = NaN;
+    if (nom > 0) {
+      const px = side === 'buy' ? ask : bid;
+      result = nom * px * (edge/100) * (dias/365);
+      if (gar > 0) garPesos = nom * px * (gar/100);
+    }
+    return {ok:true, impBid, impAsk, costTNA, cauV, edgeSell, edgeBuy,
+            dir, edge, side, baseBid: bid-spot, baseAsk: ask-spot, result, garPesos};
+  }
+
+  function readInputs() {
+    const o = {};
+    FS.forEach(k => o[k] = parseAR($(k).value));
+    return o;
+  }
+
+  function render() {
+    const inp = readInputs();
+    FS.forEach(k => {
+      const pEl = $(k + '_p');
+      if (pEl) pEl.textContent = isFinite(inp[k]) ? '= ' + fmtN(inp[k], (k==='t2_nom'?0:2)) : '';
+    });
+    saveInputs();
+    const r = calc(inp);
+    const V = $('t2_verdict'), call = $('t2_vCall'), ed = $('t2_vEdge'), why = $('t2_vWhy'), bar = $('t2_vBar');
+    V.className = 'verdict';
+    if (!r.ok) {
+      V.classList.add('v-idle'); call.textContent = '—'; ed.textContent = '';
+      why.textContent = 'Cargá spot, bid, ask y días.'; bar.style.width = '0';
+      $('t2_readout').style.display = 'none'; return;
+    }
+    $('t2_readout').style.display = 'block';
+    $('t2_rBaseBid').innerHTML = fmtN(r.baseBid,2) + ' <small>pesos</small>';
+    $('t2_rImpBid').innerHTML  = pct(r.impBid);
+    $('t2_rImpAsk').innerHTML  = pct(r.impAsk);
+    $('t2_rCau').innerHTML     = pct(r.cauV);
+    $('t2_rCost').innerHTML    = pct(r.costTNA);
+    $('t2_rEdgeSell').innerHTML = `<span class="${r.edgeSell>0?'pos':'neg'}">${fmtN(r.edgeSell,2)} pts</span>`;
+    $('t2_rEdgeBuy').innerHTML  = `<span class="${r.edgeBuy>0?'pos':'neg'}">${fmtN(r.edgeBuy,2)} pts</span>`;
+    if (isFinite(r.result)) {
+      $('t2_rowResult').style.display = 'flex';
+      $('t2_rResult').innerHTML = `<span class="${r.result>=0?'pos':'neg'}">$ ${fmtN(r.result,0)}</span>`;
+    } else $('t2_rowResult').style.display = 'none';
+    if (isFinite(r.garPesos)) {
+      $('t2_rowGar').style.display = 'flex'; $('t2_rGar').textContent = '$ ' + fmtN(r.garPesos,0);
+    } else $('t2_rowGar').style.display = 'none';
+
+    if (r.dir === 'NO CONVIENE') {
+      V.classList.add('v-red'); call.textContent = 'NO CONVIENE';
+      ed.textContent = 'mejor edge: ' + fmtN(r.edge,2) + ' pts';
+      why.textContent = 'La brecha contra tu caución no supera el costo de mover el futuro.';
+      bar.style.width = '100%'; bar.style.background = 'var(--t2-red)';
+    } else {
+      V.classList.add('v-green'); call.textContent = r.dir + ' FUTURO';
+      ed.textContent = 'edge neto ' + fmtN(r.edge,2) + ' pts de TNA';
+      why.textContent = r.dir === 'VENDER'
+        ? 'La implícita del futuro paga más que tu caución: te conviene quedarte en pesos y vender el DLR.'
+        : 'El futuro está barato en tasa: te conviene comprarlo en vez de caucionar.';
+      const w = Math.max(8, Math.min(100, r.edge * 25));
+      bar.style.width = w + '%';
+      bar.style.background = r.edge >= 1 ? 'var(--t2-green)' : 'var(--t2-amber)';
+    }
+  }
+
+  function saveInputs() {
+    const o = {}; FS.forEach(k => o[k] = $(k).value);
+    localStorage.setItem(K_IN, JSON.stringify(o));
+  }
+
+  function loadInputs() {
+    let o = {}; try { o = JSON.parse(localStorage.getItem(K_IN)) || {}; } catch(e) {}
+    if (!Object.keys(o).length) {
+      o = {t2_spot:'1433', t2_bid:'1443', t2_ask:'1443,5', t2_dias:'14', t2_cau:'16,37', t2_der:'0,02', t2_nom:'', t2_gar:'18'};
+    }
+    FS.forEach(k => { if (o[k] != null) $(k).value = o[k]; });
+  }
+
+  function limpiar() { FS.forEach(k => $(k).value = ''); render(); }
+
+  function getHist() { try { return JSON.parse(localStorage.getItem(K_HI)) || []; } catch(e) { return []; } }
+  function setHist(h) { localStorage.setItem(K_HI, JSON.stringify(h)); renderHist(); }
+
+  function guardar() {
+    const inp = readInputs(); const r = calc(inp);
+    if (!r.ok) { alert('Cargá al menos spot, bid, ask y días.'); return; }
+    const h = getHist();
+    h.unshift({t: new Date().toISOString(), spot:inp.t2_spot, bid:inp.t2_bid, ask:inp.t2_ask,
+      dias:inp.t2_dias, cau:r.cauV, impBid:r.impBid, impAsk:r.impAsk, dir:r.dir, edge:r.edge});
+    setHist(h.slice(0, 200));
+  }
+
+  function borrarHist() { if (confirm('¿Borrar todo el historial?')) setHist([]); }
+
+  function renderHist() {
+    const h = getHist(), w = $('t2_histWrap');
+    if (!h.length) { w.innerHTML = '<div class="empty">Sin cálculos guardados todavía.</div>'; return; }
+    let html = '<table><thead><tr><th>Fecha</th><th>Spot</th><th>Impl(bid)</th><th>Caución</th><th>Señal</th><th>Edge</th></tr></thead><tbody>';
+    h.forEach(e => {
+      const d = new Date(e.t);
+      const fecha = d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+      const cls = e.dir === 'NO CONVIENE' ? 'neg' : 'pos';
+      html += `<tr><td>${fecha}</td><td>${fmtN(e.spot,2)}</td><td>${fmtN(e.impBid,2)}</td><td>${fmtN(e.cau,2)}</td><td class="${cls}">${e.dir}</td><td class="${cls}">${fmtN(e.edge,2)}</td></tr>`;
+    });
+    w.innerHTML = html + '</tbody></table>';
+  }
+
+  function exportCSV() {
+    const h = getHist(); if (!h.length) { alert('No hay historial para exportar.'); return; }
+    const head = ['fecha_hora','spot','bid','ask','dias','caucion_tna','impl_bid','impl_ask','senal','edge_pts'];
+    const rows = h.map(e => [e.t, e.spot, e.bid, e.ask, e.dias, e.cau, e.impBid, e.impAsk, e.dir, e.edge]
+      .map(x => typeof x === 'number' ? x.toFixed(4) : x).join(','));
+    const csv = head.join(',') + '\n' + rows.join('\n');
+    const b = new Blob([csv], {type:'text/csv'}), u = URL.createObjectURL(b), a = document.createElement('a');
+    a.href = u; a.download = 'desarbitraje_dlr_' + new Date().toISOString().slice(0,10) + '.csv'; a.click(); URL.revokeObjectURL(u);
+  }
+
+  function toggleOpt() {
+    $('t2_optBody').classList.toggle('hidden');
+    $('t2_chev').style.transform = $('t2_optBody').classList.contains('hidden') ? '' : 'rotate(180deg)';
+  }
+
+  // Init Tab2
+  FS.forEach(k => $(k).addEventListener('input', render));
+  loadInputs(); render(); renderHist();
+
+  return { render, guardar, limpiar, borrarHist, exportCSV, toggleOpt };
+})();
 </script>
 </body>
 </html>
