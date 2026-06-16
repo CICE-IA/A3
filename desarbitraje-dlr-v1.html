@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desarbitraje DLR vs Caución — v1</title>
+<style>
+  :root{
+    --bg:#0a1220; --panel:#0f1a2c; --panel2:#13223a; --border:#22324f;
+    --txt:#e7eef9; --muted:#8595b0; --label:#6f8099;
+    --cyan:#3dd6f5; --yellow:#f6c945;
+    --green:#27c281; --amber:#ff9f43; --red:#ef5b5b;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
+    font-size:15px;line-height:1.45;padding:16px;max-width:520px;margin:0 auto}
+  h1{font-size:17px;margin:0 0 2px;letter-spacing:.3px}
+  .sub{color:var(--muted);font-size:12.5px;margin:0 0 18px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:14px;margin-bottom:14px}
+  .eyebrow{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--label);margin:0 0 12px;font-weight:600}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .field label{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;
+    color:var(--label);margin-bottom:5px}
+  .field input{width:100%;background:var(--bg);border:1px solid var(--border);
+    border-radius:8px;color:var(--txt);font-family:var(--mono);font-size:16px;
+    padding:9px 10px;outline:none}
+  .field input:focus{border-color:var(--cyan)}
+  .field .parsed{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;height:13px}
+  .field.bid input:focus{border-color:var(--cyan)}
+  .field.ask input:focus{border-color:var(--yellow)}
+  .full{grid-column:1/-1}
+  .opt-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .opt-head .eyebrow{margin:0}
+  .chev{color:var(--muted);font-size:12px;transition:transform .15s}
+  .opt-body{margin-top:12px}
+  .hidden{display:none}
+
+  /* Verdict */
+  .verdict{border-radius:12px;padding:18px 16px;text-align:center;border:1px solid var(--border);
+    background:var(--panel2);margin-bottom:14px}
+  .verdict .call{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:1px;line-height:1}
+  .verdict .edge{font-family:var(--mono);font-size:15px;margin-top:8px;color:var(--muted)}
+  .verdict .why{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .v-green{background:rgba(39,194,129,.10);border-color:var(--green)}
+  .v-green .call{color:var(--green)}
+  .v-red{background:rgba(239,91,91,.08);border-color:var(--red)}
+  .v-red .call{color:var(--red)}
+  .v-idle .call{color:var(--muted);font-size:20px}
+  .bar{height:6px;border-radius:4px;background:#1a2840;margin-top:14px;overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:4px;width:0;transition:width .25s}
+
+  /* readout rows */
+  .row{display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-bottom:1px solid var(--border)}
+  .row:last-child{border-bottom:0}
+  .row .k{color:var(--muted);font-size:13px}
+  .row .v{font-family:var(--mono);font-size:15px}
+  .row .v small{color:var(--muted);font-size:11px}
+  .tag{font-size:10px;padding:2px 7px;border-radius:5px;font-family:var(--mono);margin-left:6px;vertical-align:middle}
+  .tag.sell{background:rgba(61,214,245,.14);color:var(--cyan)}
+  .tag.buy{background:rgba(246,201,69,.14);color:var(--yellow)}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+
+  .btns{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:4px}
+  button{font-family:var(--sans);font-size:14px;font-weight:600;border-radius:9px;
+    padding:11px;border:1px solid var(--border);cursor:pointer}
+  .primary{background:var(--cyan);color:#06121f;border-color:var(--cyan)}
+  .ghost{background:transparent;color:var(--txt)}
+  .mini{font-size:12px;padding:7px 10px;font-weight:500}
+
+  details.formulas{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:0 14px;margin-bottom:14px}
+  details.formulas summary{padding:13px 0;cursor:pointer;font-size:12px;letter-spacing:1.2px;
+    text-transform:uppercase;color:var(--label);font-weight:600;list-style:none}
+  details.formulas summary::-webkit-details-marker{display:none}
+  details.formulas[open] summary{border-bottom:1px solid var(--border)}
+  .fx{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:12px 0;line-height:1.7}
+  .fx b{color:var(--txt);font-weight:400}
+  .fx .c{color:var(--cyan)} .fx .y{color:var(--yellow)}
+
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--border);font-family:var(--mono)}
+  th{color:var(--label);font-weight:600;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+  td:first-child,th:first-child{text-align:left}
+  .hist-actions{display:flex;gap:8px;margin-top:12px}
+  .empty{color:var(--muted);font-size:12.5px;text-align:center;padding:14px 0}
+  .foot{color:var(--label);font-size:11px;text-align:center;margin:6px 0 20px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<h1>Desarbitraje DLR vs Caución</h1>
+<p class="sub">Mirá de un vistazo si el futuro de dólar está caro o barato contra tu tasa de caución. Una sola pata: solo operás el DLR.</p>
+
+<div class="panel">
+  <p class="eyebrow">Datos de mercado</p>
+  <div class="grid">
+    <div class="field full">
+      <label>Spot MAE (mayorista)</label>
+      <input id="spot" inputmode="decimal" placeholder="1433">
+      <div class="parsed" id="spot_p"></div>
+    </div>
+    <div class="field bid">
+      <label>Futuro DLR — Compra (bid)</label>
+      <input id="bid" inputmode="decimal" placeholder="1443">
+      <div class="parsed" id="bid_p"></div>
+    </div>
+    <div class="field ask">
+      <label>Futuro DLR — Venta (ask)</label>
+      <input id="ask" inputmode="decimal" placeholder="1443,5">
+      <div class="parsed" id="ask_p"></div>
+    </div>
+    <div class="field">
+      <label>Días al vencimiento</label>
+      <input id="dias" inputmode="decimal" placeholder="14">
+      <div class="parsed" id="dias_p"></div>
+    </div>
+    <div class="field">
+      <label>Caución TNA (%)</label>
+      <input id="cau" inputmode="decimal" placeholder="16,37">
+      <div class="parsed" id="cau_p"></div>
+    </div>
+    <div class="field full">
+      <label>Derechos de mercado A3 (% sobre nocional, ida y vuelta)</label>
+      <input id="der" inputmode="decimal" placeholder="0,02">
+      <div class="parsed" id="der_p"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="opt-head" onclick="toggleOpt()">
+    <p class="eyebrow">Sizing (opcional)</p>
+    <span class="chev" id="chev">▾</span>
+  </div>
+  <div class="opt-body hidden" id="optBody">
+    <div class="grid">
+      <div class="field">
+        <label>Nominal (USD)</label>
+        <input id="nom" inputmode="decimal" placeholder="100000">
+        <div class="parsed" id="nom_p"></div>
+      </div>
+      <div class="field">
+        <label>Garantía exigida (%)</label>
+        <input id="gar" inputmode="decimal" placeholder="18">
+        <div class="parsed" id="gar_p"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="verdict v-idle" id="verdict">
+  <div class="call" id="vCall">—</div>
+  <div class="edge" id="vEdge"></div>
+  <div class="why" id="vWhy">Completá los datos de mercado.</div>
+  <div class="bar"><i id="vBar"></i></div>
+</div>
+
+<div class="panel" id="readout" style="display:none">
+  <p class="eyebrow">Lectura</p>
+  <div class="row"><span class="k">Base (futuro − spot)<span class="tag sell">bid</span></span><span class="v" id="rBaseBid"></span></div>
+  <div class="row"><span class="k">Implícita vendiendo<span class="tag sell">bid</span></span><span class="v" id="rImpBid"></span></div>
+  <div class="row"><span class="k">Implícita comprando<span class="tag buy">ask</span></span><span class="v" id="rImpAsk"></span></div>
+  <div class="row"><span class="k">Tu caución (referencia)</span><span class="v" id="rCau"></span></div>
+  <div class="row"><span class="k">Costo A3 anualizado</span><span class="v" id="rCost"></span></div>
+  <div class="row"><span class="k">Edge neto vendiendo</span><span class="v" id="rEdgeSell"></span></div>
+  <div class="row"><span class="k">Edge neto comprando</span><span class="v" id="rEdgeBuy"></span></div>
+  <div class="row" id="rowResult" style="display:none"><span class="k">Resultado neto estimado</span><span class="v" id="rResult"></span></div>
+  <div class="row" id="rowGar" style="display:none"><span class="k">Garantía inmovilizada</span><span class="v" id="rGar"></span></div>
+</div>
+
+<div class="btns">
+  <button class="primary" onclick="guardar()">Guardar en historial</button>
+  <button class="ghost" onclick="limpiar()">Limpiar</button>
+</div>
+
+<details class="formulas">
+  <summary>Fórmulas (cómo sale cada número)</summary>
+  <div class="fx">
+    <b>Implícita</b> = (futuro / spot − 1) × 365 / días<br>
+    &nbsp;&nbsp;· vendiendo usa el <span class="c">bid</span> (te ejecutan en la compra del libro)<br>
+    &nbsp;&nbsp;· comprando usa el <span class="y">ask</span> (pagás la venta del libro)<br><br>
+    <b>Costo A3 (TNA)</b> = derechos % × 365 / días<br>
+    &nbsp;&nbsp;<span style="color:var(--label)">(se anualiza para compararlo contra la tasa)</span><br><br>
+    <b>Edge vendiendo</b> = implícita(bid) − caución − costo<br>
+    <b>Edge comprando</b> = caución − implícita(ask) − costo<br><br>
+    <b>Señal</b>: gana el lado con edge positivo.<br>
+    &nbsp;&nbsp;· implícita &gt; caución → <span class="c">VENDER</span> futuro (pesos rinden más en caución)<br>
+    &nbsp;&nbsp;· implícita &lt; caución → <span class="y">COMPRAR</span> futuro (futuro regala tasa)<br>
+    &nbsp;&nbsp;· ninguno supera el costo → NO CONVIENE<br><br>
+    <b>Resultado</b> = nominal × spot × edge/100 × días/365<br>
+    <b>Garantía</b> = nominal × spot × garantía%<br><br>
+    <span style="color:var(--label)">Convención: 365 días, TNA simple. Comisión ALyC = 0 (cubierta por tu plan flat); por eso el único costo por trade es A3.</span>
+  </div>
+</details>
+
+<div class="panel">
+  <p class="eyebrow">Historial</p>
+  <div id="histWrap"><div class="empty">Sin cálculos guardados todavía.</div></div>
+  <div class="hist-actions">
+    <button class="ghost mini" onclick="exportCSV()">Exportar CSV</button>
+    <button class="ghost mini" onclick="borrarHist()">Borrar historial</button>
+  </div>
+</div>
+
+<p class="foot">El spot lo leés en marketdata.mae.com.ar y lo cargás a mano.<br>Herramienta de cálculo, no recomendación. La decisión es tuya.</p>
+
+<script>
+const K_IN='dlr_arb_inputs_v1', K_HI='dlr_arb_hist_v1';
+const $=id=>document.getElementById(id);
+const F=['spot','bid','ask','dias','cau','der','nom','gar'];
+
+// --- parseo formato argentino: 1.443,5 / 1443,5 / 1443.5 -> 1443.5 ---
+function parseAR(s){
+  if(s==null) return NaN;
+  s=s.toString().trim(); if(!s) return NaN;
+  if(s.includes(',')&&s.includes('.')) s=s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(',')) s=s.replace(',','.');
+  return parseFloat(s);
+}
+const fmt=(n,d=2)=>isFinite(n)?n.toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const pct=(n)=>isFinite(n)?fmt(n,2)+' %':'—';
+
+// ======= NÚCLEO DE CÁLCULO (puro: enchufar pyRofex acá es un solo cambio) =======
+function calcular(inp){
+  const {spot,bid,ask,dias,cau,der,nom,gar}=inp;
+  const ok = spot>0 && bid>0 && ask>0 && dias>0;
+  if(!ok) return {ok:false};
+  const annual = 365/dias;
+  const impBid = (bid/spot - 1)*annual*100;   // implícita vendiendo
+  const impAsk = (ask/spot - 1)*annual*100;   // implícita comprando
+  const costTNA = (isFinite(der)?der:0)*annual; // costo anualizado
+  const cauV = isFinite(cau)?cau:0;
+  const edgeSell = impBid - cauV - costTNA;    // vender futuro
+  const edgeBuy  = cauV - impAsk - costTNA;    // comprar futuro
+  let dir='NO CONVIENE', edge=Math.max(edgeSell,edgeBuy,0)===0?0:0, side=null;
+  if(edgeSell>0 && edgeSell>=edgeBuy){dir='VENDER'; edge=edgeSell; side='sell';}
+  else if(edgeBuy>0){dir='COMPRAR'; edge=edgeBuy; side='buy';}
+  else {dir='NO CONVIENE'; edge=Math.max(edgeSell,edgeBuy); side=null;}
+  // sizing
+  let result=NaN, garPesos=NaN;
+  if(nom>0){
+    const px = side==='buy'?ask:bid;
+    result = nom*px*(edge/100)*(dias/365);
+    if(gar>0) garPesos = nom*px*(gar/100);
+  }
+  return {ok:true,impBid,impAsk,costTNA,cauV,edgeSell,edgeBuy,dir,edge,side,
+          baseBid:bid-spot,baseAsk:ask-spot,result,garPesos};
+}
+
+function readInputs(){
+  const o={}; F.forEach(k=>o[k]=parseAR($(k).value)); return o;
+}
+
+function render(){
+  const inp=readInputs();
+  // echo parseado
+  F.forEach(k=>{$(k+'_p').textContent = isFinite(inp[k])?'= '+fmt(inp[k], (k==='spot'||k==='bid'||k==='ask')?2:(k==='nom'?0:2)) : '';});
+  saveInputs();
+  const r=calcular(inp);
+  const V=$('verdict'),call=$('vCall'),ed=$('vEdge'),why=$('vWhy'),bar=$('vBar');
+  V.className='verdict';
+  if(!r.ok){ V.classList.add('v-idle'); call.textContent='—'; ed.textContent='';
+    why.textContent='Cargá spot, bid, ask y días.'; bar.style.width='0';
+    $('readout').style.display='none'; return; }
+
+  $('readout').style.display='block';
+  $('rBaseBid').innerHTML = fmt(r.baseBid,2)+' <small>pesos</small>';
+  $('rImpBid').innerHTML  = pct(r.impBid);
+  $('rImpAsk').innerHTML  = pct(r.impAsk);
+  $('rCau').innerHTML     = pct(r.cauV);
+  $('rCost').innerHTML    = pct(r.costTNA);
+  $('rEdgeSell').innerHTML= '<span class="'+(r.edgeSell>0?'pos':'neg')+'">'+fmt(r.edgeSell,2)+' pts</span>';
+  $('rEdgeBuy').innerHTML = '<span class="'+(r.edgeBuy>0?'pos':'neg')+'">'+fmt(r.edgeBuy,2)+' pts</span>';
+
+  if(isFinite(r.result)){
+    $('rowResult').style.display='flex';
+    $('rResult').innerHTML='<span class="'+(r.result>=0?'pos':'neg')+'">$ '+fmt(r.result,0)+'</span>';
+  } else $('rowResult').style.display='none';
+  if(isFinite(r.garPesos)){
+    $('rowGar').style.display='flex'; $('rGar').textContent='$ '+fmt(r.garPesos,0);
+  } else $('rowGar').style.display='none';
+
+  // verdict card
+  if(r.dir==='NO CONVIENE'){
+    V.classList.add('v-red'); call.textContent='NO CONVIENE';
+    ed.textContent='mejor edge: '+fmt(r.edge,2)+' pts';
+    why.textContent='La brecha contra tu caución no supera el costo de mover el futuro.';
+    bar.style.width='100%'; bar.style.background='var(--red)';
+  } else {
+    V.classList.add('v-green'); call.textContent=r.dir+' FUTURO';
+    ed.textContent='edge neto '+fmt(r.edge,2)+' pts de TNA';
+    why.textContent = r.dir==='VENDER'
+      ? 'La implícita del futuro paga más que tu caución: te conviene quedarte en pesos y vender el DLR.'
+      : 'El futuro está barato en tasa: te conviene comprarlo en vez de caucionar.';
+    const w=Math.max(8,Math.min(100,r.edge*25)); // 4 pts ~= lleno
+    bar.style.width=w+'%';
+    bar.style.background = r.edge>=1 ? 'var(--green)' : 'var(--amber)';
+    if(r.edge<1){V.classList.remove('v-green');V.classList.add('v-green');} // borde verde igual, barra ámbar = ajustado
+  }
+}
+
+// --- persistencia inputs ---
+function saveInputs(){const o={};F.forEach(k=>o[k]=$(k).value);localStorage.setItem(K_IN,JSON.stringify(o));}
+function loadInputs(){
+  let o={};try{o=JSON.parse(localStorage.getItem(K_IN))||{};}catch(e){}
+  if(!Object.keys(o).length){ // seed: caso de validación
+    o={spot:'1433',bid:'1443',ask:'1443,5',dias:'14',cau:'16,37',der:'0,02',nom:'',gar:'18'};
+  }
+  F.forEach(k=>{if(o[k]!=null)$(k).value=o[k];});
+}
+function limpiar(){F.forEach(k=>$(k).value='');render();}
+
+// --- historial ---
+function getHist(){try{return JSON.parse(localStorage.getItem(K_HI))||[];}catch(e){return[];}}
+function setHist(h){localStorage.setItem(K_HI,JSON.stringify(h));renderHist();}
+function guardar(){
+  const inp=readInputs(); const r=calcular(inp);
+  if(!r.ok){alert('Cargá al menos spot, bid, ask y días.');return;}
+  const h=getHist();
+  h.unshift({t:new Date().toISOString(),spot:inp.spot,bid:inp.bid,ask:inp.ask,dias:inp.dias,
+    cau:r.cauV,impBid:r.impBid,impAsk:r.impAsk,dir:r.dir,edge:r.edge});
+  setHist(h.slice(0,200));
+}
+function borrarHist(){if(confirm('¿Borrar todo el historial?')){setHist([]);}}
+function renderHist(){
+  const h=getHist(),w=$('histWrap');
+  if(!h.length){w.innerHTML='<div class="empty">Sin cálculos guardados todavía.</div>';return;}
+  let html='<table><thead><tr><th>Fecha</th><th>Spot</th><th>Impl(bid)</th><th>Caución</th><th>Señal</th><th>Edge</th></tr></thead><tbody>';
+  h.forEach(e=>{
+    const d=new Date(e.t),fecha=d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    const cls=e.dir==='NO CONVIENE'?'neg':'pos';
+    html+=`<tr><td>${fecha}</td><td>${fmt(e.spot,2)}</td><td>${fmt(e.impBid,2)}</td><td>${fmt(e.cau,2)}</td><td class="${cls}">${e.dir}</td><td class="${cls}">${fmt(e.edge,2)}</td></tr>`;
+  });
+  w.innerHTML=html+'</tbody></table>';
+}
+function exportCSV(){
+  const h=getHist(); if(!h.length){alert('No hay historial para exportar.');return;}
+  const head=['fecha_hora','spot','bid','ask','dias','caucion_tna','impl_bid','impl_ask','senal','edge_pts'];
+  const rows=h.map(e=>[e.t,e.spot,e.bid,e.ask,e.dias,e.cau,e.impBid,e.impAsk,e.dir,e.edge]
+    .map(x=>typeof x==='number'?x.toFixed(4):x).join(','));
+  const csv=head.join(',')+'\n'+rows.join('\n');
+  const b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='desarbitraje_dlr_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(u);
+}
+
+function toggleOpt(){$('optBody').classList.toggle('hidden');$('chev').style.transform=$('optBody').classList.contains('hidden')?'':'rotate(180deg)';}
+
+// init
+F.forEach(k=>$(k).addEventListener('input',render));
+loadInputs(); render(); renderHist();
+</script>
+</body>
+</html>
