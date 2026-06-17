@@ -485,6 +485,125 @@ header .badge {
 .t2 .hist-actions { display: flex; gap: 8px; margin-top: 12px; }
 .t2 .empty { color: var(--t2-muted); font-size: 12.5px; text-align: center; padding: 14px 0; }
 .t2 .foot  { color: var(--t2-label); font-size: 11px; text-align: center; margin: 6px 0 20px; line-height: 1.6; }
+
+/* ═══════════════════════════════════════════════════
+   TAB 3 — RE-ARBITRAJE (estilos propios scoped)
+═══════════════════════════════════════════════════ */
+.t3 {
+  --t3-bg: #0a1220;
+  --t3-panel: #0f1a2c;
+  --t3-panel2: #13223a;
+  --t3-border: #22324f;
+  --t3-txt: #e7eef9;
+  --t3-muted: #8595b0;
+  --t3-label: #6f8099;
+  --t3-cyan: #3dd6f5;
+  --t3-yellow: #f6c945;
+  --t3-green: #27c281;
+  --t3-red: #ef5b5b;
+  --t3-mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+
+  background: var(--t3-bg);
+  color: var(--t3-txt);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 16px;
+  max-width: 980px;
+  margin: 0 auto 60px;
+}
+
+.t3 h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .3px; }
+.t3-sub { color: var(--t3-muted); font-size: 12.5px; margin: 0 0 14px; }
+
+/* Banner */
+.t3-banner {
+  border-radius: 12px; padding: 16px 18px; text-align: center;
+  border: 1px solid var(--t3-border); margin-bottom: 16px;
+}
+.t3-b-idle { background: var(--t3-panel2); border-color: var(--t3-border); }
+.t3-b-sell { background: rgba(239,91,91,0.12); border-color: var(--t3-red); }
+.t3-b-buy  { background: rgba(61,214,245,0.10); border-color: var(--t3-cyan); }
+.t3-b-neutral { background: var(--t3-panel2); border-color: var(--t3-border); }
+
+.t3-b-call {
+  font-family: var(--t3-mono); font-size: 24px; font-weight: 700; letter-spacing: 1px; line-height: 1;
+}
+.t3-b-idle .t3-b-call   { color: var(--t3-muted); font-size: 18px; }
+.t3-b-sell .t3-b-call   { color: var(--t3-red); }
+.t3-b-buy .t3-b-call    { color: var(--t3-cyan); }
+.t3-b-neutral .t3-b-call { color: var(--t3-muted); }
+
+.t3-b-detail {
+  font-size: 13px; color: var(--t3-muted); margin-top: 6px;
+  font-family: var(--t3-mono);
+}
+
+/* Layout */
+.t3-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .t3-layout { grid-template-columns: 1fr; }
+}
+
+.t3-panel {
+  background: var(--t3-panel); border: 1px solid var(--t3-border);
+  border-radius: 12px; padding: 14px; margin-bottom: 14px;
+}
+
+.t3-eyebrow {
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--t3-label); margin: 0 0 12px; font-weight: 600;
+}
+
+.t3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.t3-full { grid-column: 1/-1; }
+
+.t3-field label {
+  display: block; font-size: 11px; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--t3-label); margin-bottom: 5px;
+}
+
+.t3-field input {
+  width: 100%; background: var(--t3-bg); border: 1px solid var(--t3-border);
+  border-radius: 8px; color: var(--t3-txt); font-family: var(--t3-mono);
+  font-size: 16px; padding: 9px 10px; outline: none;
+}
+
+.t3-field input:focus { border-color: var(--t3-cyan); }
+.t3-parsed { font-family: var(--t3-mono); font-size: 11px; color: var(--t3-muted); margin-top: 3px; height: 13px; }
+
+/* Readout rows */
+.t3-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 8px 0; border-bottom: 1px solid var(--t3-border);
+}
+.t3-row:last-child { border-bottom: 0; }
+.t3-k { color: var(--t3-muted); font-size: 12.5px; }
+.t3-v { font-family: var(--t3-mono); font-size: 14px; }
+.t3-pos { color: var(--t3-green); }
+.t3-neg { color: var(--t3-red); }
+
+/* Buttons */
+.t3-btns { margin-top: 4px; }
+.t3-primary {
+  width: 100%; font-family: var(--font); font-size: 14px; font-weight: 600;
+  border-radius: 9px; padding: 12px; border: none; cursor: pointer;
+  background: var(--t3-cyan); color: #06121f;
+}
+.t3-primary:hover { opacity: .9; }
+
+/* Chart panel */
+.t3-chart-panel { display: flex; flex-direction: column; }
+.t3-chart-panel canvas { width: 100%; height: auto; display: block; border-radius: 8px; }
+.t3-chart-hint { font-size: 12px; color: var(--t3-label); text-align: center; margin-top: 8px; }
+
+.t3-foot { color: var(--t3-label); font-size: 11px; text-align: center; margin: 6px 0 20px; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -497,6 +616,7 @@ header .badge {
   <nav class="tab-nav">
     <button class="tab-btn active" onclick="showTab(1)">Arbitraje completo</button>
     <button class="tab-btn"        onclick="showTab(2)">Desarbitraje rápido</button>
+    <button class="tab-btn"        onclick="showTab(3)">Re-arbitraje</button>
   </nav>
 </header>
 
@@ -840,6 +960,96 @@ cost_TNA = (cost_total_pesos / (nominal_USD × spot)) × (365 / días) × 100
 </div><!-- /.t2 -->
 </div><!-- /#tab2 -->
 
+<!-- ═══════════════ TAB 3 — RE-ARBITRAJE ═══════════════ -->
+<div id="tab3" class="tab-pane">
+<div class="t3">
+
+<h1>Re-arbitraje DLR vs Caución</h1>
+<p class="t3-sub">Calculá el precio justo del futuro según la caución y detectá si conviene entrar.</p>
+
+<!-- BANNER -->
+<div class="t3-banner t3-b-idle" id="t3_banner">
+  <div class="t3-b-call" id="t3_bCall">—</div>
+  <div class="t3-b-detail" id="t3_bDetail">Completá los datos y calculá.</div>
+</div>
+
+<div class="t3-layout">
+  <!-- LEFT: inputs + key values -->
+  <div class="t3-left">
+    <div class="t3-panel">
+      <p class="t3-eyebrow">Datos de mercado</p>
+      <div class="t3-grid">
+        <div class="t3-field t3-full">
+          <label>Spot MAE (mayorista)</label>
+          <input id="t3_spot" inputmode="decimal" placeholder="1433">
+          <div class="t3-parsed" id="t3_spot_p"></div>
+        </div>
+        <div class="t3-field">
+          <label>Futuro — Compra (bid)</label>
+          <input id="t3_bid" inputmode="decimal" placeholder="1443">
+          <div class="t3-parsed" id="t3_bid_p"></div>
+        </div>
+        <div class="t3-field">
+          <label>Futuro — Venta (ask)</label>
+          <input id="t3_ask" inputmode="decimal" placeholder="1443,5">
+          <div class="t3-parsed" id="t3_ask_p"></div>
+        </div>
+        <div class="t3-field">
+          <label>Días al vencimiento</label>
+          <input id="t3_dias" inputmode="decimal" placeholder="14">
+          <div class="t3-parsed" id="t3_dias_p"></div>
+        </div>
+        <div class="t3-field">
+          <label>Caución TNA (%)</label>
+          <input id="t3_cau" inputmode="decimal" placeholder="16,37">
+          <div class="t3-parsed" id="t3_cau_p"></div>
+        </div>
+        <div class="t3-field">
+          <label>Derechos A3 (% nocional)</label>
+          <input id="t3_der" inputmode="decimal" placeholder="0,02">
+          <div class="t3-parsed" id="t3_der_p"></div>
+        </div>
+        <div class="t3-field t3-full">
+          <label>Nominal (USD)</label>
+          <input id="t3_nom" inputmode="decimal" placeholder="100000">
+          <div class="t3-parsed" id="t3_nom_p"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="t3-panel" id="t3_readout" style="display:none">
+      <p class="t3-eyebrow">Valores clave</p>
+      <div class="t3-row"><span class="t3-k">Precio justo (F_fair)</span><span class="t3-v" id="t3_rFair"></span></div>
+      <div class="t3-row"><span class="t3-k">TNA implícita (bid)</span><span class="t3-v" id="t3_rImpBid"></span></div>
+      <div class="t3-row"><span class="t3-k">Caución TNA</span><span class="t3-v" id="t3_rCau"></span></div>
+      <div class="t3-row"><span class="t3-k">Costo A3 anualizado</span><span class="t3-v" id="t3_rCost"></span></div>
+      <div class="t3-row"><span class="t3-k">Spread (impl.bid − caución)</span><span class="t3-v" id="t3_rSpread"></span></div>
+      <div class="t3-row"><span class="t3-k">Precio entrada VENTA</span><span class="t3-v" id="t3_rSellEntry"></span></div>
+      <div class="t3-row"><span class="t3-k">Precio entrada COMPRA</span><span class="t3-v" id="t3_rBuyEntry"></span></div>
+      <div class="t3-row"><span class="t3-k">Ganancia estimada</span><span class="t3-v" id="t3_rGain"></span></div>
+      <div class="t3-row"><span class="t3-k">Nominal en pesos</span><span class="t3-v" id="t3_rNomARS"></span></div>
+    </div>
+
+    <div class="t3-btns">
+      <button class="t3-primary" onclick="T3.calcular()">Calcular re-arbitraje</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: canvas chart -->
+  <div class="t3-right">
+    <div class="t3-panel t3-chart-panel">
+      <p class="t3-eyebrow">Curva TNA implícita vs precio futuro</p>
+      <canvas id="t3_canvas" width="400" height="320"></canvas>
+      <p class="t3-chart-hint" id="t3_chartHint">Calculá para ver el gráfico</p>
+    </div>
+  </div>
+</div>
+
+<p class="t3-foot">Precio justo = spot × (1 + TNA_cau/100 × días/365). La convergencia al fair value no está garantizada. Herramienta de cálculo, no recomendación.</p>
+
+</div><!-- /.t3 -->
+</div><!-- /#tab3 -->
+
 <script>
 /* ═══════════════════════════════════════════════════
    TAB SWITCHING
@@ -858,6 +1068,7 @@ function showTab(n) {
 (function() {
   const saved = parseInt(localStorage.getItem('arb_active_tab') || '1');
   if (saved === 2) showTab(2);
+  else if (saved === 3) showTab(3);
 })();
 
 /* ═══════════════════════════════════════════════════
@@ -1317,6 +1528,359 @@ const T2 = (() => {
   loadInputs(); render(); renderHist();
 
   return { render, guardar, limpiar, borrarHist, exportCSV, toggleOpt };
+})();
+
+/* ═══════════════════════════════════════════════════
+   TAB 3 — RE-ARBITRAJE
+═══════════════════════════════════════════════════ */
+const T3 = (() => {
+  const LS_KEY = 't3_dlr_inputs_v1';
+  const INPUT_IDS = ['t3_spot','t3_bid','t3_ask','t3_dias','t3_cau','t3_der','t3_nom'];
+
+  function $(id) { return document.getElementById(id); }
+
+  // Parse comma-or-dot decimal, return NaN if empty/invalid
+  function pN(id) {
+    const raw = $(id).value.trim().replace(/\./g, '').replace(',', '.');
+    const v = parseFloat(raw);
+    return isFinite(v) ? v : NaN;
+  }
+
+  function setParsed(id, text) {
+    const el = $(id + '_p');
+    if (el) el.textContent = text;
+  }
+
+  function fmtN(n, dec) {
+    if (!isFinite(n)) return '—';
+    return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  function fmtARS(n) {
+    if (!isFinite(n)) return '—';
+    return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function loadInputs() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      INPUT_IDS.forEach(k => { if (saved[k] !== undefined) $(k).value = saved[k]; });
+    } catch(e) {}
+  }
+
+  function saveInputs() {
+    const obj = {};
+    INPUT_IDS.forEach(k => { obj[k] = $(k).value; });
+    localStorage.setItem(LS_KEY, JSON.stringify(obj));
+  }
+
+  let lastData = null; // store for canvas resize
+
+  function calcular() {
+    saveInputs();
+
+    const spot = pN('t3_spot');
+    const bid  = pN('t3_bid');
+    const ask  = pN('t3_ask');
+    const dias = pN('t3_dias');
+    const cau  = pN('t3_cau');
+    const der  = pN('t3_der');
+    const nom  = pN('t3_nom');
+
+    // Update parsed previews
+    setParsed('t3_spot', isFinite(spot) ? fmtN(spot, 2) : '');
+    setParsed('t3_bid',  isFinite(bid)  ? fmtN(bid, 2)  : '');
+    setParsed('t3_ask',  isFinite(ask)  ? fmtN(ask, 2)  : '');
+    setParsed('t3_dias', isFinite(dias) ? dias + ' días' : '');
+    setParsed('t3_cau',  isFinite(cau)  ? fmtN(cau, 4) + '%' : '');
+    setParsed('t3_der',  isFinite(der)  ? fmtN(der, 4) + '%' : '');
+    setParsed('t3_nom',  isFinite(nom)  ? 'USD ' + fmtN(nom, 0) : '');
+
+    if (!isFinite(spot) || !isFinite(dias) || !isFinite(cau) || !isFinite(der)
+        || spot <= 0 || dias <= 0) {
+      setBanner('idle', null, null, null);
+      $('t3_readout').style.display = 'none';
+      $('t3_chartHint').textContent = 'Completá spot, días, caución y derechos para ver el gráfico.';
+      lastData = null;
+      return;
+    }
+
+    const costTNA   = der * 365 / dias;                              // derechos anualizados
+    const fFair     = spot * (1 + cau / 100 * dias / 365);
+    const fSellEntry = spot * (1 + (cau + costTNA) / 100 * dias / 365);
+    const fBuyEntry  = spot * (1 + (cau - costTNA) / 100 * dias / 365);
+
+    // Implied TNA functions
+    const tna = (F) => (F / spot - 1) * 365 / dias * 100;
+
+    const impBid = isFinite(bid) ? tna(bid) : NaN;
+    const impAsk = isFinite(ask) ? tna(ask) : NaN;
+    const spread = isFinite(impBid) ? impBid - cau : NaN;
+
+    // Estimated gain if converges to fair
+    const gainSell = isFinite(bid) && isFinite(nom) ? (bid - fFair) * nom : NaN;
+    const gainBuy  = isFinite(ask) && isFinite(nom) ? (fFair - ask) * nom : NaN;
+    const nomARS   = isFinite(nom) ? nom * spot : NaN;
+
+    // Signal
+    let signal = 'neutral';
+    if (isFinite(bid) && bid > fSellEntry) signal = 'sell';
+    else if (isFinite(ask) && ask < fBuyEntry) signal = 'buy';
+
+    // Banner
+    if (signal === 'sell') {
+      const g = isFinite(gainSell) ? ' | Est. ganancia: ' + fmtARS(gainSell) : '';
+      setBanner('sell',
+        'VENDER FUTURO',
+        'Vendé a ' + fmtN(bid,2) + ' → objetivo ' + fmtN(fFair,2) + g,
+        gainSell);
+    } else if (signal === 'buy') {
+      const g = isFinite(gainBuy) ? ' | Est. ganancia: ' + fmtARS(gainBuy) : '';
+      setBanner('buy',
+        'COMPRAR FUTURO',
+        'Comprá a ' + fmtN(ask,2) + ' → objetivo ' + fmtN(fFair,2) + g,
+        gainBuy);
+    } else {
+      setBanner('neutral', 'NEUTRAL', 'Sin señal — futuro dentro de la banda de costos', null);
+    }
+
+    // Readout
+    $('t3_readout').style.display = 'block';
+    $('t3_rFair').textContent      = fmtN(fFair, 4);
+    $('t3_rImpBid').textContent    = isFinite(impBid) ? fmtN(impBid, 4) + '%' : '—';
+    $('t3_rCau').textContent       = fmtN(cau, 4) + '%';
+    $('t3_rCost').textContent      = fmtN(costTNA, 4) + '%';
+
+    const spreadEl = $('t3_rSpread');
+    if (isFinite(spread)) {
+      spreadEl.textContent = fmtN(spread, 4) + '%';
+      spreadEl.className = 't3-v ' + (spread > 0 ? 't3-pos' : spread < 0 ? 't3-neg' : '');
+    } else {
+      spreadEl.textContent = '—';
+      spreadEl.className = 't3-v';
+    }
+
+    $('t3_rSellEntry').textContent = fmtN(fSellEntry, 4);
+    $('t3_rBuyEntry').textContent  = fmtN(fBuyEntry, 4);
+
+    const gainEl = $('t3_rGain');
+    const activeGain = signal === 'sell' ? gainSell : signal === 'buy' ? gainBuy : NaN;
+    gainEl.textContent = isFinite(activeGain) ? fmtARS(activeGain) : '—';
+    gainEl.className = 't3-v ' + (activeGain > 0 ? 't3-pos' : activeGain < 0 ? 't3-neg' : '');
+
+    $('t3_rNomARS').textContent = isFinite(nomARS) ? fmtARS(nomARS) : '—';
+
+    // Store for chart resize
+    lastData = { spot, bid, ask, dias, cau, costTNA, fFair, fSellEntry, fBuyEntry, tna, signal };
+
+    // Draw chart
+    $('t3_chartHint').textContent = '';
+    drawChart(lastData);
+  }
+
+  function setBanner(state, call, detail) {
+    const el = $('t3_banner');
+    el.className = 't3-banner t3-b-' + state;
+    $('t3_bCall').textContent   = call   || '—';
+    $('t3_bDetail').textContent = detail || '';
+  }
+
+  function drawChart(d) {
+    const canvas = $('t3_canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Responsive: resize canvas to display size
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width  || 400;
+    const H = rect.height || 320;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    const cw = W, ch = H;
+    const pad = { top: 30, right: 110, bottom: 46, left: 56 };
+    const pw = cw - pad.left - pad.right;
+    const ph = ch - pad.top  - pad.bottom;
+
+    // X range: price
+    const spread = Math.max(d.fFair * 0.03, Math.abs(d.fFair - (isFinite(d.bid) ? d.bid : d.fFair)) * 1.5, 1);
+    const xMin = d.fFair - spread;
+    const xMax = d.fFair + spread;
+
+    // Y range: TNA %
+    const tnaAtMin = d.tna(xMin);
+    const tnaAtMax = d.tna(xMax);
+    const yMin = Math.min(tnaAtMin, d.cau - d.costTNA * 2) - 0.5;
+    const yMax = Math.max(tnaAtMax, d.cau + d.costTNA * 2) + 0.5;
+
+    function xPx(price) { return pad.left + (price - xMin) / (xMax - xMin) * pw; }
+    function yPx(tna)   { return pad.top  + (1 - (tna - yMin) / (yMax - yMin)) * ph; }
+
+    // BG
+    ctx.fillStyle = '#0a1220';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Clip to chart area
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.left, pad.top, pw, ph);
+    ctx.clip();
+
+    // SELL zone (right of fSellEntry)
+    const xSell = xPx(d.fSellEntry);
+    if (xSell < pad.left + pw) {
+      ctx.fillStyle = 'rgba(239,91,91,0.15)';
+      ctx.fillRect(Math.max(xSell, pad.left), pad.top, pad.left + pw - Math.max(xSell, pad.left), ph);
+    }
+
+    // BUY zone (left of fBuyEntry)
+    const xBuy = xPx(d.fBuyEntry);
+    if (xBuy > pad.left) {
+      ctx.fillStyle = 'rgba(61,214,245,0.12)';
+      ctx.fillRect(pad.left, pad.top, Math.min(xBuy, pad.left + pw) - pad.left, ph);
+    }
+
+    // Grid lines (Y)
+    ctx.strokeStyle = 'rgba(139,149,158,0.15)';
+    ctx.lineWidth = 1;
+    const yStep = (yMax - yMin) / 5;
+    for (let i = 0; i <= 5; i++) {
+      const ty = yMin + i * yStep;
+      const py2 = yPx(ty);
+      ctx.beginPath(); ctx.moveTo(pad.left, py2); ctx.lineTo(pad.left + pw, py2); ctx.stroke();
+    }
+
+    // Caución TNA line (green dashed)
+    ctx.strokeStyle = '#27c281';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    const yCau = yPx(d.cau);
+    ctx.beginPath(); ctx.moveTo(pad.left, yCau); ctx.lineTo(pad.left + pw, yCau); ctx.stroke();
+
+    // Band upper (cau + cost) — sell threshold
+    ctx.strokeStyle = 'rgba(239,91,91,0.7)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    const ySellTNA = yPx(d.cau + d.costTNA);
+    ctx.beginPath(); ctx.moveTo(pad.left, ySellTNA); ctx.lineTo(pad.left + pw, ySellTNA); ctx.stroke();
+
+    // Band lower (cau - cost) — buy threshold
+    ctx.strokeStyle = 'rgba(61,214,245,0.7)';
+    const yBuyTNA = yPx(d.cau - d.costTNA);
+    ctx.beginPath(); ctx.moveTo(pad.left, yBuyTNA); ctx.lineTo(pad.left + pw, yBuyTNA); ctx.stroke();
+
+    // Fair value vertical line
+    ctx.strokeStyle = 'rgba(133,149,176,0.6)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    const xFair = xPx(d.fFair);
+    ctx.beginPath(); ctx.moveTo(xFair, pad.top); ctx.lineTo(xFair, pad.top + ph); ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // TNA curve (diagonal line — it's linear in F)
+    ctx.strokeStyle = '#f6c945';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, yPx(d.tna(xMin)));
+    ctx.lineTo(pad.left + pw, yPx(d.tna(xMax)));
+    ctx.stroke();
+
+    ctx.restore(); // end clip
+
+    // Bid dot
+    if (isFinite(d.bid) && d.bid >= xMin && d.bid <= xMax) {
+      const xb = xPx(d.bid);
+      const yb = yPx(d.tna(d.bid));
+      ctx.fillStyle = '#ef5b5b';
+      ctx.beginPath(); ctx.arc(xb, yb, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ef5b5b';
+      ctx.font = '10px ' + '"SF Mono", Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('bid', xb, yb - 9);
+    }
+
+    // Ask dot
+    if (isFinite(d.ask) && d.ask >= xMin && d.ask <= xMax) {
+      const xa = xPx(d.ask);
+      const ya = yPx(d.tna(d.ask));
+      ctx.fillStyle = '#3dd6f5';
+      ctx.beginPath(); ctx.arc(xa, ya, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#3dd6f5';
+      ctx.font = '10px ' + '"SF Mono", Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('ask', xa, ya - 9);
+    }
+
+    // X axis labels
+    ctx.fillStyle = '#8595b0';
+    ctx.font = '10px ' + '"SF Mono", Consolas, monospace';
+    ctx.textAlign = 'center';
+    const xTicks = 5;
+    for (let i = 0; i <= xTicks; i++) {
+      const price = xMin + i * (xMax - xMin) / xTicks;
+      const px2 = xPx(price);
+      ctx.fillText(price.toFixed(1), px2, pad.top + ph + 14);
+    }
+
+    // Y axis labels
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 5; i++) {
+      const ty = yMin + i * yStep;
+      ctx.fillText(ty.toFixed(2) + '%', pad.left - 5, yPx(ty) + 4);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#6f8099';
+    ctx.font = '10px ' + '"SF Mono", Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Precio futuro', pad.left + pw / 2, ch - 4);
+    ctx.save();
+    ctx.translate(10, pad.top + ph / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('TNA implícita %', 0, 0);
+    ctx.restore();
+
+    // Legend (top-right, outside clip)
+    const lx = pad.left + pw + 8;
+    let ly = pad.top + 4;
+    const legendItems = [
+      { color: '#f6c945',                  label: 'TNA(F)' },
+      { color: '#27c281',                  label: 'Caución' },
+      { color: 'rgba(239,91,91,0.7)',      label: '± costo' },
+      { color: 'rgba(133,149,176,0.6)',    label: 'F_fair' },
+      { color: '#ef5b5b',                  label: 'bid', dot: true },
+      { color: '#3dd6f5',                  label: 'ask', dot: true },
+    ];
+    ctx.font = '9.5px ' + '"SF Mono", Consolas, monospace';
+    legendItems.forEach(item => {
+      if (item.dot) {
+        ctx.fillStyle = item.color;
+        ctx.beginPath(); ctx.arc(lx + 5, ly + 4, 4, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(lx, ly + 4); ctx.lineTo(lx + 11, ly + 4); ctx.stroke();
+      }
+      ctx.fillStyle = '#8595b0';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.label, lx + 14, ly + 8);
+      ly += 16;
+    });
+  }
+
+  // Redraw chart on window resize
+  window.addEventListener('resize', () => {
+    if (lastData) drawChart(lastData);
+  });
+
+  // Tab 3 init
+  loadInputs();
+
+  return { calcular };
 })();
 </script>
 </body>
