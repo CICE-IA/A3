@@ -1201,7 +1201,8 @@ const T2 = (() => {
 
   function readInputs() {
     const o = {};
-    FS.forEach(k => o[k] = parseAR($(k).value));
+    // Strip t2_ prefix so calc() can destructure {spot, bid, ask, ...} directly
+    FS.forEach(k => o[k.replace('t2_', '')] = parseAR($(k).value));
     return o;
   }
 
@@ -1209,7 +1210,8 @@ const T2 = (() => {
     const inp = readInputs();
     FS.forEach(k => {
       const pEl = $(k + '_p');
-      if (pEl) pEl.textContent = isFinite(inp[k]) ? '= ' + fmtN(inp[k], (k==='t2_nom'?0:2)) : '';
+      const sk = k.replace('t2_', '');
+      if (pEl) pEl.textContent = isFinite(inp[sk]) ? '= ' + fmtN(inp[sk], (sk==='nom'?0:2)) : '';
     });
     saveInputs();
     const r = calc(inp);
@@ -1275,8 +1277,8 @@ const T2 = (() => {
     const inp = readInputs(); const r = calc(inp);
     if (!r.ok) { alert('Cargá al menos spot, bid, ask y días.'); return; }
     const h = getHist();
-    h.unshift({t: new Date().toISOString(), spot:inp.t2_spot, bid:inp.t2_bid, ask:inp.t2_ask,
-      dias:inp.t2_dias, cau:r.cauV, impBid:r.impBid, impAsk:r.impAsk, dir:r.dir, edge:r.edge});
+    h.unshift({t: new Date().toISOString(), spot:inp.spot, bid:inp.bid, ask:inp.ask,
+      dias:inp.dias, cau:r.cauV, impBid:r.impBid, impAsk:r.impAsk, dir:r.dir, edge:r.edge});
     setHist(h.slice(0, 200));
   }
 
