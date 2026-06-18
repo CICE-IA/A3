@@ -1240,343 +1240,391 @@ renderHistory();
 document.getElementById('tipoPata').dispatchEvent(new Event('change'));
 
 /* ═══════════════════════════════════════════════════
-   TAB 2 — DESARBITRAJE · RE-ARBITRAJE (namespace T2U)
+   TAB 2 UNIFIED — DESARBITRAJE · RE-ARBITRAJE (namespace T2U)
 ═══════════════════════════════════════════════════ */
 const T2U = (() => {
-  const LS_KEY = 't2u_inputs_v1';
-  const LS_HIST = 't2u_hist_v1';
-  const IDS = ['t2_spot','t2_bid','t2_ask','t2_dias','t2_cau','t2_der','t2_nom','t2_gar'];
+  const K_IN = 't2u_inputs_v1';
+  const K_HI = 't2u_hist_v1';
+  const FS = ['t2_spot','t2_bid','t2_ask','t2_dias','t2_cau','t2_der','t2_nom','t2_gar'];
+  const DEFAULTS = {t2_spot:'1433', t2_bid:'1443', t2_ask:'1443,5', t2_dias:'14', t2_cau:'16,37', t2_der:'0,02', t2_nom:'', t2_gar:'18'};
 
-  const $  = id => document.getElementById(id);
+  const $el = id => document.getElementById(id);
 
-  function pN(id) {
-    const raw = ($( id).value||'').trim().replace(/\./g,'').replace(',','.');
-    const v = parseFloat(raw);
-    return isFinite(v) ? v : NaN;
+  function parseAR(s) {
+    if (s == null) return NaN;
+    s = s.toString().trim(); if (!s) return NaN;
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',','.');
+    else if (s.includes(',')) s = s.replace(',','.');
+    return parseFloat(s);
   }
 
-  function setParsed(id, text) {
-    const el = $(id + '_p');
-    if (el) el.textContent = text ? ('= ' + text) : '';
-  }
+  const fmtN = (n, d=2) => isFinite(n) ? n.toLocaleString('es-AR', {minimumFractionDigits:d, maximumFractionDigits:d}) : '—';
+  const pct  = n => isFinite(n) ? fmtN(n,2) + ' %' : '—';
+  const fmtARS = n => isFinite(n) ? '$ ' + fmtN(n, 0) : '—';
 
-  function fmtN(n, d=2) {
-    if (!isFinite(n)) return '—';
-    return n.toLocaleString('es-AR', {minimumFractionDigits:d, maximumFractionDigits:d});
-  }
-  function fmtARS(n) {
-    if (!isFinite(n)) return '—';
-    return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0});
-  }
-  function fmtPct(n, d=2) { return isFinite(n) ? fmtN(n,d) + ' %' : '—'; }
-
-  function saveInputs() {
+  function readInputs() {
     const o = {};
-    IDS.forEach(k => { o[k] = $(k) ? $(k).value : ''; });
-    localStorage.setItem(LS_KEY, JSON.stringify(o));
+    FS.forEach(k => { o[k.replace('t2_', '')] = parseAR($el(k).value); });
+    return o;
   }
 
-  function loadInputs() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-      // seed defaults
-      const def = {t2_spot:'1433',t2_bid:'1443',t2_ask:'1443,5',t2_dias:'14',
-                   t2_cau:'16,37',t2_der:'0,02',t2_nom:'',t2_gar:'18'};
-      IDS.forEach(k => {
-        if ($(k)) $(k).value = (saved[k] !== undefined && saved[k] !== '') ? saved[k] : (def[k] || '');
-      });
-    } catch(e) {}
+  function calcAll(inp) {
+    const {spot, bid, ask, dias, cau, der, nom, gar} = inp;
+    const ok = spot > 0 && dias > 0 && isFinite(cau) && isFinite(der);
+    if (!ok) return {ok: false};
+    const annual = 365 / dias;
+    const costTNA  = der * annual;
+    const fFair    = spot * (1 + cau / 100 * dias / 365);
+    const fSell    = spot * (1 + (cau + costTNA) / 100 * dias / 365);
+    const fBuy     = spot * (1 + (cau - costTNA) / 100 * dias / 365);
+    const tnaFn    = F => (F / spot - 1) * annual * 100;
+    const impBid   = isFinite(bid) ? tnaFn(bid) : NaN;
+    const impAsk   = isFinite(ask) ? tnaFn(ask) : NaN;
+    const edgeSell = isFinite(impBid) ? impBid - cau - costTNA : NaN;
+    const edgeBuy  = isFinite(impAsk) ? cau - impAsk - costTNA : NaN;
+
+    let signal = 'neutral';
+    if (isFinite(edgeSell) && edgeSell > 0) signal = 'sell';
+    else if (isFinite(edgeBuy) && edgeBuy > 0) signal = 'buy';
+
+    let gain = NaN, garPesos = NaN;
+    if (isFinite(nom) && nom > 0) {
+      if (signal === 'sell' && isFinite(bid)) gain = (bid - fFair) * nom;
+      else if (signal === 'buy' && isFinite(ask)) gain = (fFair - ask) * nom;
+      if (isFinite(gar) && gar > 0) {
+        const px = signal === 'buy' && isFinite(ask) ? ask : isFinite(bid) ? bid : spot;
+        garPesos = nom * px * (gar / 100);
+      }
+    }
+
+    return {ok:true, spot, bid, ask, dias, cau, der, costTNA, fFair, fSell, fBuy,
+            tnaFn, impBid, impAsk, edgeSell, edgeBuy, signal, gain, garPesos};
   }
 
-  let lastData = null;
+  function updateParsed() {
+    const names = ['spot','bid','ask','dias','cau','der','nom','gar'];
+    names.forEach(n => {
+      const v = parseAR($el('t2_' + n).value);
+      const p = $el('t2_' + n + '_p');
+      if (p) p.textContent = isFinite(v) ? '= ' + fmtN(v, n === 'nom' ? 0 : 2) : '';
+    });
+  }
 
-  function calcular() {
+  function render() {
+    updateParsed();
     saveInputs();
+    const inp = readInputs();
+    const r = calcAll(inp);
 
-    const spot = pN('t2_spot'), bid = pN('t2_bid'), ask = pN('t2_ask');
-    const dias = pN('t2_dias'), cau = pN('t2_cau'), der = pN('t2_der');
-    const nom  = pN('t2_nom'),  gar = pN('t2_gar');
+    const banner = $el('t2u_banner');
+    const bCall  = $el('t2u_bCall');
+    const bDet   = $el('t2u_bDetail');
 
-    // parsed previews
-    setParsed('t2_spot', isFinite(spot) ? fmtN(spot,2) : '');
-    setParsed('t2_bid',  isFinite(bid)  ? fmtN(bid,2)  : '');
-    setParsed('t2_ask',  isFinite(ask)  ? fmtN(ask,2)  : '');
-    setParsed('t2_dias', isFinite(dias) ? dias + ' días' : '');
-    setParsed('t2_cau',  isFinite(cau)  ? fmtN(cau,4)+'%' : '');
-    setParsed('t2_der',  isFinite(der)  ? fmtN(der,4)+'%' : '');
-    setParsed('t2_nom',  isFinite(nom)  ? 'USD '+fmtN(nom,0) : '');
-    setParsed('t2_gar',  isFinite(gar)  ? gar+'%' : '');
-
-    if (!isFinite(spot) || !isFinite(dias) || !isFinite(cau) || !isFinite(der) || spot<=0 || dias<=0) {
-      setBanner('idle', null, null);
-      $('t2u_readout').style.display = 'none';
-      $('t2u_chartHint').textContent = 'Completá spot, días, caución y derechos A3.';
+    if (!r.ok) {
+      banner.className = 't2u-banner t2u-b-idle';
+      bCall.textContent = '—';
+      bDet.textContent  = 'Completá spot, días, caución y derechos para ver la señal.';
+      $el('t2u_readout').style.display = 'none';
+      $el('t2u_chartHint').textContent = 'Completá los datos y calculá para ver el gráfico.';
       lastData = null;
       return;
     }
 
-    // Core formulas
-    const tna   = F => (F/spot - 1) * 365/dias * 100;
-    const costTNA    = der * 365 / dias;
-    const fFair      = spot * (1 + cau/100 * dias/365);
-    const fSellEntry = spot * (1 + (cau + costTNA)/100 * dias/365);
-    const fBuyEntry  = spot * (1 + (cau - costTNA)/100 * dias/365);
-
-    const impBid = isFinite(bid) ? tna(bid) : NaN;
-    const impAsk = isFinite(ask) ? tna(ask) : NaN;
-    const edgeSell = isFinite(impBid) ? impBid - cau - costTNA : NaN;
-    const edgeBuy  = isFinite(impAsk) ? cau - impAsk - costTNA : NaN;
-
-    // Gain if converges to fair value
-    const gainSell = isFinite(bid) && isFinite(nom) ? (bid - fFair) * nom : NaN;
-    const gainBuy  = isFinite(ask) && isFinite(nom) ? (fFair - ask) * nom : NaN;
-    const garPesos = isFinite(nom) && isFinite(gar) ? nom * spot * gar/100 : NaN;
-    const nomARS   = isFinite(nom) ? nom * spot : NaN;
-
-    // Signal
-    let signal = 'neutral';
-    if (isFinite(edgeSell) && edgeSell > 0 && edgeSell >= (isFinite(edgeBuy)?edgeBuy:-Infinity)) signal = 'sell';
-    else if (isFinite(edgeBuy) && edgeBuy > 0) signal = 'buy';
-
     // Banner
-    if (signal === 'sell') {
-      const g = isFinite(gainSell) ? ' | Est. ganancia: ' + fmtARS(gainSell) : '';
-      setBanner('sell', 'VENDER FUTURO',
-        'Vendé a ' + fmtN(bid,2) + ' → objetivo ' + fmtN(fFair,2) + g);
-    } else if (signal === 'buy') {
-      const g = isFinite(gainBuy) ? ' | Est. ganancia: ' + fmtARS(gainBuy) : '';
-      setBanner('buy', 'COMPRAR FUTURO',
-        'Comprá a ' + fmtN(ask,2) + ' → objetivo ' + fmtN(fFair,2) + g);
+    if (r.signal === 'sell') {
+      banner.className = 't2u-banner t2u-b-sell';
+      const g = isFinite(r.gain) ? ' | Ganancia est. ' + fmtARS(r.gain) : '';
+      bCall.textContent = 'VENDER FUTURO · Entrá a ' + fmtN(r.bid,2) + ' → Objetivo ' + fmtN(r.fFair,2) + g;
+    } else if (r.signal === 'buy') {
+      banner.className = 't2u-banner t2u-b-buy';
+      const g = isFinite(r.gain) ? ' | Ganancia est. ' + fmtARS(r.gain) : '';
+      bCall.textContent = 'COMPRAR FUTURO · Entrá a ' + fmtN(r.ask,2) + ' → Objetivo ' + fmtN(r.fFair,2) + g;
     } else {
-      setBanner('neutral', 'SIN SEÑAL', 'Spread neto ≤ 0 en ambos lados — costos se comen el diferencial');
+      banner.className = 't2u-banner t2u-b-neutral';
+      bCall.textContent = 'NEUTRAL — Sin señal · spread neto ≤ 0 en ambos lados';
     }
+    bDet.textContent = '';
 
     // Readout
-    $('t2u_readout').style.display = 'block';
-    $('t2u_rFair').textContent    = fmtN(fFair,2);
-    $('t2u_rImpBid').textContent  = fmtPct(impBid,4);
-    $('t2u_rImpAsk').textContent  = fmtPct(impAsk,4);
-    $('t2u_rCau').textContent     = fmtPct(cau,4);
-    $('t2u_rCost').textContent    = fmtPct(costTNA,4);
+    $el('t2u_readout').style.display = 'block';
+    $el('t2u_rFair').textContent    = fmtN(r.fFair, 4);
+    $el('t2u_rImpBid').innerHTML    = isFinite(r.impBid) ? `<span class="${r.impBid > r.cau + r.costTNA ? 't2u-pos' : ''}">${pct(r.impBid)}</span>` : '—';
+    $el('t2u_rImpAsk').innerHTML    = isFinite(r.impAsk) ? pct(r.impAsk) : '—';
+    $el('t2u_rCau').textContent     = pct(r.cau);
+    $el('t2u_rCost').textContent    = pct(r.costTNA);
+    $el('t2u_rEdgeSell').innerHTML  = isFinite(r.edgeSell) ? `<span class="${r.edgeSell>0?'t2u-pos':'t2u-neg'}">${fmtN(r.edgeSell,2)} pts</span>` : '—';
+    $el('t2u_rEdgeBuy').innerHTML   = isFinite(r.edgeBuy)  ? `<span class="${r.edgeBuy>0?'t2u-pos':'t2u-neg'}">${fmtN(r.edgeBuy,2)} pts</span>` : '—';
+    $el('t2u_rFsell').textContent   = fmtN(r.fSell, 4);
+    $el('t2u_rFbuy').textContent    = fmtN(r.fBuy, 4);
 
-    const esSellEl = $('t2u_rEdgeSell');
-    esSellEl.textContent = isFinite(edgeSell) ? fmtN(edgeSell,4)+' pp' : '—';
-    esSellEl.className   = 't2u-v ' + (edgeSell>0 ? 't2u-pos' : edgeSell<0 ? 't2u-neg' : '');
-
-    const esBuyEl = $('t2u_rEdgeBuy');
-    esBuyEl.textContent = isFinite(edgeBuy) ? fmtN(edgeBuy,4)+' pp' : '—';
-    esBuyEl.className   = 't2u-v ' + (edgeBuy>0 ? 't2u-pos' : edgeBuy<0 ? 't2u-neg' : '');
-
-    $('t2u_rFsell').textContent   = fmtN(fSellEntry,2);
-    $('t2u_rFbuy').textContent    = fmtN(fBuyEntry,2);
-
-    const activeGain = signal==='sell' ? gainSell : signal==='buy' ? gainBuy : NaN;
-    if (isFinite(activeGain)) {
-      $('t2u_rowGain').style.display = 'flex';
-      const gEl = $('t2u_rGain');
-      gEl.textContent = fmtARS(activeGain);
-      gEl.className   = 't2u-v ' + (activeGain>=0 ? 't2u-pos' : 't2u-neg');
+    if (isFinite(r.gain)) {
+      $el('t2u_rowGain').style.display = 'flex';
+      $el('t2u_rGain').innerHTML = `<span class="${r.gain>=0?'t2u-pos':'t2u-neg'}">${fmtARS(r.gain)}</span>`;
     } else {
-      $('t2u_rowGain').style.display = 'none';
+      $el('t2u_rowGain').style.display = 'none';
     }
 
-    if (isFinite(garPesos)) {
-      $('t2u_rowGar').style.display = 'flex';
-      $('t2u_rGar').textContent = fmtARS(garPesos);
+    if (isFinite(r.garPesos)) {
+      $el('t2u_rowGar').style.display = 'flex';
+      $el('t2u_rGar').textContent = fmtARS(r.garPesos);
     } else {
-      $('t2u_rowGar').style.display = 'none';
+      $el('t2u_rowGar').style.display = 'none';
     }
 
-    // Store & draw
-    lastData = {spot,bid,ask,dias,cau,costTNA,fFair,fSellEntry,fBuyEntry,tna,signal};
-    $('t2u_chartHint').textContent = '';
-    drawChart(lastData);
+    // Draw chart
+    lastData = r;
+    drawChart(r);
+    $el('t2u_chartHint').textContent = '';
   }
 
-  function setBanner(state, call, detail) {
-    const el = $('t2u_banner');
-    el.className = 't2u-banner t2u-b-' + state;
-    $('t2u_bCall').textContent   = call   || '—';
-    $('t2u_bDetail').textContent = detail || '';
+  function saveInputs() {
+    const o = {}; FS.forEach(k => { o[k] = $el(k).value; });
+    localStorage.setItem(K_IN, JSON.stringify(o));
   }
+
+  function loadInputs() {
+    let o = {};
+    try { o = JSON.parse(localStorage.getItem(K_IN)) || {}; } catch(e) {}
+    if (!Object.keys(o).length) o = DEFAULTS;
+    FS.forEach(k => { if (o[k] != null) $el(k).value = o[k]; });
+  }
+
+  let lastData = null;
 
   function drawChart(d) {
-    const canvas = $('t2u_canvas');
+    const canvas = $el('t2u_canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    const W = rect.width || 400, H = rect.height || 320;
+    const W = rect.width  || 400;
+    const H = rect.height || 320;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
-    const pad = {top:30, right:110, bottom:46, left:56};
-    const pw = W - pad.left - pad.right;
-    const ph = H - pad.top  - pad.bottom;
+    const cw = W, ch = H;
+    const pad = { top: 30, right: 110, bottom: 46, left: 56 };
+    const pw = cw - pad.left - pad.right;
+    const ph = ch - pad.top  - pad.bottom;
 
-    const spread = Math.max(d.fFair*0.03,
-      isFinite(d.bid) ? Math.abs(d.fFair-d.bid)*1.5 : 0, 1);
-    const xMin = d.fFair - spread, xMax = d.fFair + spread;
-    const tnaMin = d.tna(xMin), tnaMax = d.tna(xMax);
-    const yMin = Math.min(tnaMin, d.cau - d.costTNA*2) - 0.5;
-    const yMax = Math.max(tnaMax, d.cau + d.costTNA*2) + 0.5;
+    const fMid = d.fFair;
+    const spread = Math.max(fMid * 0.03, 1);
+    const xMin = fMid * 0.97;
+    const xMax = fMid * 1.03;
 
-    const xPx = p => pad.left + (p-xMin)/(xMax-xMin)*pw;
-    const yPx = t => pad.top  + (1-(t-yMin)/(yMax-yMin))*ph;
+    const tnaAtMin = d.tnaFn(xMin);
+    const tnaAtMax = d.tnaFn(xMax);
+    const yMin = Math.min(tnaAtMin, d.cau - d.costTNA * 2) - 0.5;
+    const yMax = Math.max(tnaAtMax, d.cau + d.costTNA * 2) + 0.5;
 
-    // BG
+    function xPx(price) { return pad.left + (price - xMin) / (xMax - xMin) * pw; }
+    function yPx(tna)   { return pad.top  + (1 - (tna - yMin) / (yMax - yMin)) * ph; }
+
     ctx.fillStyle = '#0a1220';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, cw, ch);
 
-    // Clip
     ctx.save();
     ctx.beginPath(); ctx.rect(pad.left, pad.top, pw, ph); ctx.clip();
 
-    // SELL zone
-    const xSell = xPx(d.fSellEntry);
-    if (xSell < pad.left+pw) {
+    // SELL zone (red, right of fSell)
+    const xSell = xPx(d.fSell);
+    if (xSell < pad.left + pw) {
       ctx.fillStyle = 'rgba(239,91,91,0.15)';
-      ctx.fillRect(Math.max(xSell,pad.left), pad.top, pad.left+pw-Math.max(xSell,pad.left), ph);
+      ctx.fillRect(Math.max(xSell, pad.left), pad.top, pad.left + pw - Math.max(xSell, pad.left), ph);
     }
-    // BUY zone
-    const xBuyPx = xPx(d.fBuyEntry);
-    if (xBuyPx > pad.left) {
-      ctx.fillStyle = 'rgba(61,214,245,0.12)';
-      ctx.fillRect(pad.left, pad.top, Math.min(xBuyPx,pad.left+pw)-pad.left, ph);
-    }
-    // Grid Y
-    ctx.strokeStyle = 'rgba(139,149,158,0.15)';
-    ctx.lineWidth = 1;
-    const yStep = (yMax-yMin)/5;
-    for (let i=0;i<=5;i++) {
-      const ty = yMin+i*yStep, py2=yPx(ty);
-      ctx.beginPath(); ctx.moveTo(pad.left,py2); ctx.lineTo(pad.left+pw,py2); ctx.stroke();
-    }
-    // Caución line
-    ctx.strokeStyle='#27c281'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
-    const yCau=yPx(d.cau);
-    ctx.beginPath(); ctx.moveTo(pad.left,yCau); ctx.lineTo(pad.left+pw,yCau); ctx.stroke();
-    // Upper band
-    ctx.strokeStyle='rgba(239,91,91,0.7)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
-    const ySell=yPx(d.cau+d.costTNA);
-    ctx.beginPath(); ctx.moveTo(pad.left,ySell); ctx.lineTo(pad.left+pw,ySell); ctx.stroke();
-    // Lower band
-    ctx.strokeStyle='rgba(61,214,245,0.7)';
-    const yBuy2=yPx(d.cau-d.costTNA);
-    ctx.beginPath(); ctx.moveTo(pad.left,yBuy2); ctx.lineTo(pad.left+pw,yBuy2); ctx.stroke();
-    // Fair value vertical
-    ctx.strokeStyle='rgba(133,149,176,0.6)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
-    const xFair=xPx(d.fFair);
-    ctx.beginPath(); ctx.moveTo(xFair,pad.top); ctx.lineTo(xFair,pad.top+ph); ctx.stroke();
-    ctx.setLineDash([]);
-    // TNA curve
-    ctx.strokeStyle='#f6c945'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(pad.left,yPx(d.tna(xMin))); ctx.lineTo(pad.left+pw,yPx(d.tna(xMax))); ctx.stroke();
 
+    // BUY zone (cyan, left of fBuy)
+    const xBuy = xPx(d.fBuy);
+    if (xBuy > pad.left) {
+      ctx.fillStyle = 'rgba(61,214,245,0.12)';
+      ctx.fillRect(pad.left, pad.top, Math.min(xBuy, pad.left + pw) - pad.left, ph);
+    }
+
+    // White/neutral zone between bands (subtle)
+    if (xSell > pad.left && xBuy < pad.left + pw) {
+      const l = Math.max(xBuy, pad.left);
+      const r2 = Math.min(xSell, pad.left + pw);
+      if (r2 > l) {
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        ctx.fillRect(l, pad.top, r2 - l, ph);
+      }
+    }
+
+    // Grid lines Y
+    ctx.strokeStyle = 'rgba(139,149,158,0.15)'; ctx.lineWidth = 1;
+    const yStep = (yMax - yMin) / 5;
+    for (let i = 0; i <= 5; i++) {
+      const ty = yMin + i * yStep;
+      ctx.beginPath(); ctx.moveTo(pad.left, yPx(ty)); ctx.lineTo(pad.left + pw, yPx(ty)); ctx.stroke();
+    }
+
+    // Caución green dashed
+    ctx.strokeStyle = '#27c281'; ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(pad.left, yPx(d.cau)); ctx.lineTo(pad.left + pw, yPx(d.cau)); ctx.stroke();
+
+    // Upper band (cau + cost)
+    ctx.strokeStyle = 'rgba(239,91,91,0.7)'; ctx.lineWidth = 1; ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(pad.left, yPx(d.cau + d.costTNA)); ctx.lineTo(pad.left + pw, yPx(d.cau + d.costTNA)); ctx.stroke();
+
+    // Lower band (cau - cost)
+    ctx.strokeStyle = 'rgba(61,214,245,0.7)';
+    ctx.beginPath(); ctx.moveTo(pad.left, yPx(d.cau - d.costTNA)); ctx.lineTo(pad.left + pw, yPx(d.cau - d.costTNA)); ctx.stroke();
+
+    // Fair value vertical
+    ctx.strokeStyle = 'rgba(133,149,176,0.6)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    const xFairPx = xPx(d.fFair);
+    ctx.beginPath(); ctx.moveTo(xFairPx, pad.top); ctx.lineTo(xFairPx, pad.top + ph); ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // TNA diagonal (yellow)
+    ctx.strokeStyle = '#f6c945'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, yPx(d.tnaFn(xMin)));
+    ctx.lineTo(pad.left + pw, yPx(d.tnaFn(xMax)));
+    ctx.stroke();
+
+    ctx.restore(); // end clip
+
+    // Bid dot + label
+    if (isFinite(d.bid) && d.bid >= xMin && d.bid <= xMax) {
+      const xb = xPx(d.bid), yb = yPx(d.tnaFn(d.bid));
+      ctx.fillStyle = '#ef5b5b';
+      ctx.beginPath(); ctx.arc(xb, yb, 5, 0, Math.PI*2); ctx.fill();
+      ctx.font = '10px "SF Mono",Consolas,monospace'; ctx.textAlign = 'center';
+      ctx.fillText('BID', xb, yb - 9);
+    }
+
+    // Ask dot + label
+    if (isFinite(d.ask) && d.ask >= xMin && d.ask <= xMax) {
+      const xa = xPx(d.ask), ya = yPx(d.tnaFn(d.ask));
+      ctx.fillStyle = '#3dd6f5';
+      ctx.beginPath(); ctx.arc(xa, ya, 5, 0, Math.PI*2); ctx.fill();
+      ctx.font = '10px "SF Mono",Consolas,monospace'; ctx.textAlign = 'center';
+      ctx.fillText('ASK', xa, ya - 9);
+    }
+
+    // "Precio justo" label near vertical line
+    ctx.fillStyle = 'rgba(133,149,176,0.8)';
+    ctx.font = '9px "SF Mono",Consolas,monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Precio justo', xFairPx, pad.top - 6);
+
+    // X axis labels
+    ctx.fillStyle = '#8595b0'; ctx.font = '10px "SF Mono",Consolas,monospace'; ctx.textAlign = 'center';
+    const xTicks = 5;
+    for (let i = 0; i <= xTicks; i++) {
+      const price = xMin + i * (xMax - xMin) / xTicks;
+      ctx.fillText(price.toFixed(1), xPx(price), pad.top + ph + 14);
+    }
+
+    // Y axis labels
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 5; i++) {
+      const ty = yMin + i * yStep;
+      ctx.fillText(ty.toFixed(2) + '%', pad.left - 5, yPx(ty) + 4);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#6f8099'; ctx.font = '10px "SF Mono",Consolas,monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Precio futuro', pad.left + pw / 2, ch - 4);
+    ctx.save();
+    ctx.translate(10, pad.top + ph / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('TNA implícita %', 0, 0);
     ctx.restore();
 
-    // Bid dot
-    if (isFinite(d.bid) && d.bid>=xMin && d.bid<=xMax) {
-      const xb=xPx(d.bid), yb=yPx(d.tna(d.bid));
-      ctx.fillStyle='#ef5b5b';
-      ctx.beginPath(); ctx.arc(xb,yb,5,0,Math.PI*2); ctx.fill();
-      ctx.font='10px "SF Mono",Consolas,monospace'; ctx.textAlign='center';
-      ctx.fillText('bid',xb,yb-9);
-    }
-    // Ask dot
-    if (isFinite(d.ask) && d.ask>=xMin && d.ask<=xMax) {
-      const xa=xPx(d.ask), ya=yPx(d.tna(d.ask));
-      ctx.fillStyle='#3dd6f5';
-      ctx.beginPath(); ctx.arc(xa,ya,5,0,Math.PI*2); ctx.fill();
-      ctx.font='10px "SF Mono",Consolas,monospace'; ctx.textAlign='center';
-      ctx.fillText('ask',xa,ya-9);
-    }
-    // X labels
-    ctx.fillStyle='#8595b0'; ctx.font='10px "SF Mono",Consolas,monospace'; ctx.textAlign='center';
-    for (let i=0;i<=5;i++) {
-      const p=xMin+i*(xMax-xMin)/5;
-      ctx.fillText(p.toFixed(1), xPx(p), pad.top+ph+14);
-    }
-    // Y labels
-    ctx.textAlign='right';
-    for (let i=0;i<=5;i++) {
-      const ty=yMin+i*yStep;
-      ctx.fillText(ty.toFixed(2)+'%', pad.left-5, yPx(ty)+4);
-    }
-    // Axis titles
-    ctx.fillStyle='#6f8099'; ctx.textAlign='center';
-    ctx.fillText('Precio futuro', pad.left+pw/2, H-4);
-    ctx.save(); ctx.translate(10,pad.top+ph/2); ctx.rotate(-Math.PI/2);
-    ctx.fillText('TNA implícita %',0,0); ctx.restore();
-    // Legend
-    const lx=pad.left+pw+8; let ly=pad.top+4;
-    const items=[
-      {c:'#f6c945',       l:'TNA(F)'},
-      {c:'#27c281',       l:'Caución'},
-      {c:'rgba(239,91,91,0.7)', l:'± costo'},
-      {c:'rgba(133,149,176,0.6)',l:'F_fair'},
-      {c:'#ef5b5b', l:'bid', dot:true},
-      {c:'#3dd6f5', l:'ask', dot:true},
+    // Legend (top-right)
+    const lx = pad.left + pw + 8;
+    let ly = pad.top + 4;
+    const legendItems = [
+      { color: '#f6c945',               label: 'TNA(F)' },
+      { color: '#27c281',               label: 'Caución' },
+      { color: 'rgba(239,91,91,0.7)',   label: '± costo' },
+      { color: 'rgba(133,149,176,0.6)', label: 'F_fair' },
+      { color: '#ef5b5b',               label: 'BID', dot: true },
+      { color: '#3dd6f5',               label: 'ASK', dot: true },
     ];
-    ctx.font='9.5px "SF Mono",Consolas,monospace';
-    items.forEach(it => {
-      if (it.dot) {
-        ctx.fillStyle=it.c; ctx.beginPath(); ctx.arc(lx+5,ly+4,4,0,Math.PI*2); ctx.fill();
+    ctx.font = '9.5px "SF Mono",Consolas,monospace';
+    legendItems.forEach(item => {
+      if (item.dot) {
+        ctx.fillStyle = item.color;
+        ctx.beginPath(); ctx.arc(lx + 5, ly + 4, 4, 0, Math.PI * 2); ctx.fill();
       } else {
-        ctx.strokeStyle=it.c; ctx.lineWidth=2; ctx.setLineDash([]);
-        ctx.beginPath(); ctx.moveTo(lx,ly+4); ctx.lineTo(lx+11,ly+4); ctx.stroke();
+        ctx.strokeStyle = item.color; ctx.lineWidth = 2; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(lx, ly + 4); ctx.lineTo(lx + 11, ly + 4); ctx.stroke();
       }
-      ctx.fillStyle='#8595b0'; ctx.textAlign='left';
-      ctx.fillText(it.l, lx+14, ly+8);
-      ly+=16;
+      ctx.fillStyle = '#8595b0'; ctx.textAlign = 'left';
+      ctx.fillText(item.label, lx + 14, ly + 8);
+      ly += 16;
     });
   }
 
-  // Historial
-  function getHist() { try { return JSON.parse(localStorage.getItem(LS_HIST)||'[]'); } catch(e){return[];} }
-  function setHist(h) { localStorage.setItem(LS_HIST,JSON.stringify(h)); renderHist(); }
+  function getHist() { try { return JSON.parse(localStorage.getItem(K_HI)) || []; } catch(e) { return []; } }
+  function setHist(h) { localStorage.setItem(K_HI, JSON.stringify(h)); renderHist(); }
 
   function guardar() {
-    if (!lastData) { alert('Calculá primero.'); return; }
-    const spot=pN('t2_spot'),bid=pN('t2_bid'),ask=pN('t2_ask'),dias=pN('t2_dias'),cau=pN('t2_cau');
-    const h=getHist();
-    h.unshift({t:new Date().toISOString(),spot,bid,ask,dias,cau,
-      fFair:lastData.fFair, signal:lastData.signal});
-    setHist(h.slice(0,200));
+    const inp = readInputs();
+    const r = calcAll(inp);
+    if (!r.ok) { alert('Cargá al menos spot, días, caución y derechos.'); return; }
+    const h = getHist();
+    h.unshift({
+      t: new Date().toISOString(),
+      spot: inp.spot, bid: inp.bid, ask: inp.ask, dias: inp.dias,
+      senal: r.signal === 'sell' ? 'VENDER' : r.signal === 'buy' ? 'COMPRAR' : 'NEUTRAL',
+      edgeSell: r.edgeSell, edgeBuy: r.edgeBuy, fFair: r.fFair
+    });
+    setHist(h.slice(0, 200));
   }
 
-  function borrarHist() { if(confirm('¿Borrar historial?')) setHist([]); }
+  function borrarHist() { if (confirm('¿Borrar todo el historial?')) setHist([]); }
 
   function renderHist() {
-    const h=getHist(), w=$('t2u_histWrap');
-    if (!h.length){w.innerHTML='<div class="t2u-empty">Sin cálculos guardados todavía.</div>';return;}
-    const fmtD = s => { const d=new Date(s); return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}); };
-    let html='<table><thead><tr><th>Fecha</th><th>Spot</th><th>Bid</th><th>Ask</th><th>Días</th><th>Caución</th><th>F_fair</th><th>Señal</th></tr></thead><tbody>';
-    h.forEach(e=>{
-      const sc=e.signal==='sell'?'t2u-pos':e.signal==='buy'?'t2u-pos':'t2u-neg';
-      const sl=e.signal==='sell'?'VENDER':e.signal==='buy'?'COMPRAR':'SIN SEÑAL';
-      html+=`<tr><td>${fmtD(e.t)}</td><td>${fmtN(e.spot,2)}</td><td>${fmtN(e.bid,2)}</td><td>${fmtN(e.ask,2)}</td><td>${e.dias}</td><td>${fmtN(e.cau,2)}%</td><td>${fmtN(e.fFair,2)}</td><td class="${sc}">${sl}</td></tr>`;
+    const h = getHist(), w = $el('t2u_histWrap');
+    if (!h.length) { w.innerHTML = '<div class="t2u-empty">Sin cálculos guardados todavía.</div>'; return; }
+    let html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;font-family:var(--t2-mono)"><thead><tr>';
+    ['Fecha','Spot','Bid','Ask','Señal','Edge Sell','Edge Buy','F_fair'].forEach(h2 => {
+      html += `<th style="text-align:right;padding:6px 4px;border-bottom:1px solid var(--t2-border);color:var(--t2-label);font-size:10px;text-transform:uppercase;letter-spacing:.5px">${h2}</th>`;
     });
-    w.innerHTML=html+'</tbody></table>';
+    html += '</tr></thead><tbody>';
+    h.forEach(e => {
+      const d = new Date(e.t);
+      const fecha = d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+      const clsSig = e.senal === 'VENDER' ? 'color:var(--t2-red)' : e.senal === 'COMPRAR' ? 'color:var(--t2-cyan)' : 'color:var(--t2-muted)';
+      const td = (v, extra='') => `<td style="text-align:right;padding:6px 4px;border-bottom:1px solid var(--t2-border);${extra}">${v}</td>`;
+      html += `<tr>
+        ${td(fecha, 'text-align:left')}
+        ${td(fmtN(e.spot,2))}
+        ${td(isFinite(e.bid)?fmtN(e.bid,2):'—')}
+        ${td(isFinite(e.ask)?fmtN(e.ask,2):'—')}
+        ${td(e.senal, clsSig)}
+        ${td(isFinite(e.edgeSell)?fmtN(e.edgeSell,2):'—', e.edgeSell>0?'color:var(--t2-green)':'')}
+        ${td(isFinite(e.edgeBuy)?fmtN(e.edgeBuy,2):'—', e.edgeBuy>0?'color:var(--t2-green)':'')}
+        ${td(fmtN(e.fFair,2))}
+      </tr>`;
+    });
+    w.innerHTML = html + '</tbody></table></div>';
   }
 
   function exportCSV() {
-    const h=getHist(); if(!h.length){alert('No hay historial.');return;}
-    const head=['fecha','spot','bid','ask','dias','caucion_tna','f_fair','senal'];
-    const rows=h.map(e=>[e.t,e.spot,e.bid,e.ask,e.dias,e.cau,
-      isFinite(e.fFair)?e.fFair.toFixed(4):'',e.signal].map(x=>`"${x}"`).join(','));
-    const csv=head.join(',')+'\n'+rows.join('\n');
-    const b=new Blob(['﻿'+csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');
-    a.href=u; a.download='desarbitraje_dlr_'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); URL.revokeObjectURL(u);
+    const h = getHist(); if (!h.length) { alert('No hay historial para exportar.'); return; }
+    const head = ['fecha','spot','bid','ask','senal','edge_sell','edge_buy','f_fair'];
+    const rows = h.map(e => [
+      e.t, e.spot, e.bid, e.ask, e.senal, e.edgeSell, e.edgeBuy, e.fFair
+    ].map(x => (typeof x === 'number' ? x.toFixed(4) : (x ?? ''))).join(','));
+    const csv = head.join(',') + '\n' + rows.join('\n');
+    const b = new Blob([csv], {type:'text/csv'}), u = URL.createObjectURL(b), a = document.createElement('a');
+    a.href = u; a.download = 'desarbitraje_' + new Date().toISOString().slice(0,10) + '.csv'; a.click(); URL.revokeObjectURL(u);
   }
 
-  window.addEventListener('resize',()=>{ if(lastData) drawChart(lastData); });
+  function calcular() { render(); }
+
+  window.addEventListener('resize', () => { if (lastData) drawChart(lastData); });
 
   // Init
-  IDS.forEach(k=>{ const el=$(k); if(el) el.addEventListener('input', calcular); });
+  FS.forEach(k => { $el(k).addEventListener('input', render); });
   loadInputs();
-  calcular();
+  render();
   renderHist();
 
   return { calcular, guardar, borrarHist, exportCSV };
